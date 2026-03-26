@@ -1,0 +1,2685 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>CETTS | The Future of Tailings</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+        }
+    }
+    </script>
+    <style>
+        *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+        :root {
+            --bg: #050508;
+            --bg2: #0a0b10;
+            --accent: #38bdf8;
+            --accent2: #0ea5e9;
+            --gold: #f59e0b;
+            --danger: #ef4444;
+            --text: #e2e8f0;
+            --muted: #64748b;
+            --glass: rgba(15,20,35,0.75);
+        }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        /* ── PRELOADER ── */
+        #preloader {
+            position: fixed; inset:0; z-index:9999;
+            background: #000;
+            display: flex; align-items:center; justify-content:center;
+            flex-direction: column; gap: 1.5rem;
+            transition: opacity 0.8s ease, visibility 0.8s;
+        }
+        #preloader.hidden { opacity:0; visibility:hidden; pointer-events:none; }
+        #preloader .logo-text {
+            font-size: 2rem; font-weight: 800; letter-spacing: 0.3em;
+            color: var(--accent);
+            opacity: 0;
+            animation: fadeInUp 1s 0.3s forwards;
+        }
+        #preloader .tagline {
+            font-size: 0.85rem; letter-spacing: 0.15em; color: var(--muted);
+            text-transform: uppercase;
+            opacity: 0;
+            animation: fadeInUp 1s 0.8s forwards;
+        }
+        #preloader .bar-track {
+            width: 200px; height: 2px; background: rgba(255,255,255,0.1);
+            border-radius: 2px; overflow: hidden;
+            opacity: 0; animation: fadeInUp 1s 1.2s forwards;
+        }
+        #preloader .bar-fill {
+            height: 100%; width: 0; background: var(--accent);
+            animation: loadBar 2s 1.5s ease-in-out forwards;
+        }
+
+        @keyframes fadeInUp {
+            from { opacity:0; transform:translateY(12px); }
+            to { opacity:1; transform:translateY(0); }
+        }
+        @keyframes loadBar { to { width:100%; } }
+
+        /* ── NAV ── */
+        nav {
+            position: fixed; top:0; left:0; right:0; z-index:100;
+            padding: 1rem 2rem;
+            display: flex; justify-content: space-between; align-items: center;
+            background: transparent;
+            transition: background 0.4s, backdrop-filter 0.4s;
+        }
+        nav.scrolled {
+            background: rgba(5,5,8,0.9);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(56,189,248,0.1);
+        }
+        nav .brand {
+            font-weight: 800; font-size: 1.1rem; letter-spacing: 0.25em;
+            color: var(--accent);
+        }
+        nav .nav-links { display:flex; gap:2rem; align-items:center; }
+        nav .nav-links a {
+            color: var(--muted); text-decoration:none; font-size:0.8rem;
+            letter-spacing: 0.1em; text-transform: uppercase; font-weight: 500;
+            transition: color 0.3s;
+        }
+        nav .nav-links a:hover { color: var(--accent); }
+        .nav-cta {
+            background: transparent; border: 1px solid var(--accent);
+            color: var(--accent); padding: 0.5rem 1.2rem; border-radius: 2rem;
+            font-size: 0.75rem; font-weight: 600; letter-spacing: 0.1em;
+            text-transform: uppercase; cursor: pointer;
+            transition: all 0.3s;
+        }
+        .nav-cta:hover { background: var(--accent); color: #000; }
+
+        /* ── HERO ── */
+        #hero {
+            position: relative;
+            height: 100vh;
+            display: flex; align-items:center; justify-content:center;
+            text-align: center;
+            overflow: hidden;
+        }
+        #heroCanvas {
+            position: absolute; inset:0; z-index:0;
+        }
+        .hero-overlay {
+            position: absolute; inset:0; z-index:1;
+            background: radial-gradient(ellipse at center, transparent 0%, rgba(5,5,8,0.7) 70%, rgba(5,5,8,0.95) 100%);
+        }
+        .hero-content {
+            position: relative; z-index:2;
+            max-width: 800px; padding: 0 2rem;
+        }
+        .hero-content .eyebrow {
+            font-size: 0.75rem; letter-spacing: 0.3em; text-transform: uppercase;
+            color: var(--accent); font-weight: 600; margin-bottom: 1.5rem;
+            opacity:0; animation: fadeInUp 1s 3.8s forwards;
+        }
+        .hero-content h1 {
+            font-size: clamp(2rem, 5vw, 3.5rem);
+            font-weight: 300; line-height: 1.2;
+            color: rgba(255,255,255,0.95);
+            margin-bottom: 1.5rem;
+            opacity:0; animation: fadeInUp 1s 4.1s forwards;
+        }
+        .hero-content h1 strong {
+            font-weight: 800;
+            background: linear-gradient(135deg, #fff, var(--accent));
+            -webkit-background-clip: text; background-clip: text;
+            color: transparent;
+        }
+        .hero-content .hero-sub {
+            font-size: 1rem; color: var(--muted); max-width: 500px; margin: 0 auto 2rem;
+            opacity:0; animation: fadeInUp 1s 4.4s forwards;
+        }
+        .scroll-indicator {
+            position: absolute; bottom: 2rem; left:50%; transform:translateX(-50%);
+            z-index:2; display:flex; flex-direction:column; align-items:center; gap:0.5rem;
+            opacity:0; animation: fadeInUp 1s 4.8s forwards;
+        }
+        .scroll-indicator span {
+            font-size: 0.65rem; letter-spacing: 0.2em; text-transform: uppercase;
+            color: var(--muted);
+        }
+        .scroll-line {
+            width:1px; height:40px; background: linear-gradient(to bottom, var(--accent), transparent);
+            animation: scrollPulse 2s infinite;
+        }
+        @keyframes scrollPulse {
+            0%,100% { opacity:0.3; } 50% { opacity:1; }
+        }
+
+        /* ── SECTIONS ── */
+        .section {
+            padding: 8rem 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            opacity: 0;
+            transform: translateY(40px);
+            transition: opacity 0.8s ease, transform 0.8s ease;
+        }
+        .section.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .section-label {
+            font-size: 0.7rem; letter-spacing: 0.3em; text-transform: uppercase;
+            color: var(--accent); font-weight: 600; margin-bottom: 1rem;
+            text-align: center;
+        }
+        .section-title {
+            font-size: clamp(1.8rem, 4vw, 2.8rem);
+            font-weight: 300; line-height: 1.2;
+            color: rgba(255,255,255,0.95);
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+        .section-title strong {
+            font-weight: 800;
+        }
+        .section-desc {
+            font-size: 1rem; color: var(--muted); max-width: 600px;
+            margin-bottom: 3rem;
+            text-align: center;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* ── DISASTER CARDS ── */
+        .disaster-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+        .disaster-card {
+            background: var(--glass);
+            border: 1px solid rgba(239,68,68,0.2);
+            border-radius: 1rem;
+            padding: 2rem;
+            position: relative;
+            overflow: hidden;
+            transition: border-color 0.3s, transform 0.3s;
+        }
+        .disaster-card:hover {
+            border-color: var(--danger);
+            transform: translateY(-4px);
+        }
+        .disaster-card .year {
+            font-size: 0.7rem; letter-spacing: 0.2em; color: var(--danger);
+            font-weight: 700; text-transform: uppercase; margin-bottom: 0.5rem;
+        }
+        .disaster-card h3 {
+            font-size: 1.3rem; font-weight: 700; margin-bottom: 0.5rem;
+        }
+        .disaster-card .location {
+            font-size: 0.85rem; color: var(--muted); margin-bottom: 1rem;
+        }
+        .disaster-card .stat-row {
+            display: flex; gap: 1.5rem; flex-wrap: wrap;
+        }
+        .disaster-card .stat {
+            display: flex; flex-direction: column;
+        }
+        .disaster-card .stat .num {
+            font-size: 1.5rem; font-weight: 800; color: var(--danger);
+        }
+        .disaster-card .stat .label {
+            font-size: 0.7rem; color: var(--muted); text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        /* ── COST COUNTER ── */
+        .cost-section {
+            text-align: center;
+            padding: 6rem 2rem;
+        }
+        .cost-counter {
+            font-size: clamp(3rem, 8vw, 6rem);
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--danger), var(--gold));
+            -webkit-background-clip: text; background-clip: text;
+            color: transparent;
+            margin: 1rem 0;
+        }
+        .cost-label {
+            font-size: 1rem; color: var(--muted);
+            letter-spacing: 0.1em;
+        }
+
+        /* ── COMPARISON TABLE ── */
+        .compare-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 2rem;
+        }
+        .compare-table th {
+            text-align: left;
+            padding: 1rem 1.2rem;
+            font-size: 0.7rem;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--muted);
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+        .compare-table th:nth-child(2) { color: var(--danger); }
+        .compare-table th:nth-child(3) { color: var(--accent); }
+        .compare-table td {
+            padding: 1rem 1.2rem;
+            font-size: 0.9rem;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+        }
+        .compare-table td:nth-child(2) { color: rgba(239,68,68,0.8); }
+        .compare-table td:nth-child(3) { color: var(--accent); font-weight: 600; }
+        .compare-table tr:hover td { background: rgba(56,189,248,0.03); }
+
+        /* ── MEMBRANE SECTION ── */
+        .membrane-reveal {
+            text-align: center;
+            padding: 8rem 2rem;
+            position: relative;
+        }
+        .membrane-glow {
+            width: 200px; height: 200px;
+            margin: 2rem auto;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(56,189,248,0.3) 0%, rgba(56,189,248,0.05) 50%, transparent 70%);
+            display: flex; align-items:center; justify-content:center;
+            animation: memPulse 3s infinite ease-in-out;
+            position: relative;
+        }
+        .membrane-glow::before {
+            content: '';
+            position: absolute;
+            width: 120px; height: 120px;
+            border-radius: 50%;
+            border: 2px solid rgba(56,189,248,0.4);
+            animation: memSpin 8s linear infinite;
+        }
+        .membrane-glow::after {
+            content: '';
+            position: absolute;
+            width: 80px; height: 80px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(56,189,248,0.6), rgba(56,189,248,0.1));
+        }
+        @keyframes memPulse {
+            0%,100% { transform:scale(1); opacity:0.8; }
+            50% { transform:scale(1.1); opacity:1; }
+        }
+        @keyframes memSpin {
+            to { transform: rotate(360deg); }
+        }
+        .membrane-stats {
+            display: flex; justify-content:center; gap: 3rem; margin-top: 3rem;
+            flex-wrap: wrap;
+        }
+        .membrane-stat {
+            text-align: center;
+        }
+        .membrane-stat .val {
+            font-size: 2.5rem; font-weight: 900;
+            background: linear-gradient(135deg, #fff, var(--accent));
+            -webkit-background-clip: text; background-clip: text;
+            color: transparent;
+        }
+        .membrane-stat .lbl {
+            font-size: 0.75rem; color: var(--muted); text-transform: uppercase;
+            letter-spacing: 0.1em; margin-top: 0.3rem;
+        }
+
+        /* ── 3D VIEWER ── */
+        .viewer-container {
+            width: 100%;
+            height: 500px;
+            border-radius: 1rem;
+            overflow: hidden;
+            border: 1px solid rgba(56,189,248,0.15);
+            margin: 2rem 0;
+            position: relative;
+        }
+        .viewer-badge {
+            position: absolute; top: 1rem; left: 1rem; z-index: 5;
+            background: rgba(5,5,8,0.8);
+            backdrop-filter: blur(10px);
+            padding: 0.4rem 1rem;
+            border-radius: 2rem;
+            font-size: 0.7rem;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--accent);
+            border: 1px solid rgba(56,189,248,0.2);
+        }
+
+        /* ── WHAT COMES OUT ── */
+        .metals-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+        .metal-card {
+            background: var(--glass);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 0.8rem;
+            padding: 1.5rem;
+            text-align: center;
+            transition: border-color 0.3s, transform 0.3s;
+        }
+        .metal-card:hover {
+            border-color: var(--gold);
+            transform: translateY(-3px);
+        }
+        .metal-card .symbol {
+            font-size: 2rem; font-weight: 900;
+            background: linear-gradient(135deg, var(--gold), #fbbf24);
+            -webkit-background-clip: text; background-clip: text;
+            color: transparent;
+        }
+        .metal-card .name {
+            font-size: 0.8rem; color: var(--muted); margin-top: 0.3rem;
+        }
+        .metal-card .price {
+            font-size: 0.85rem; font-weight: 700; color: var(--gold);
+            margin-top: 0.5rem;
+        }
+
+        /* ── PROOF SECTION ── */
+        .proof-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+        .proof-card {
+            background: var(--glass);
+            border: 1px solid rgba(56,189,248,0.1);
+            border-radius: 1rem;
+            padding: 2rem;
+            text-align: center;
+        }
+        .proof-card .proof-val {
+            font-size: 2.2rem; font-weight: 900; color: var(--accent);
+        }
+        .proof-card .proof-label {
+            font-size: 0.8rem; color: var(--muted); margin-top: 0.3rem;
+        }
+        .proof-card .proof-context {
+            font-size: 0.75rem; color: rgba(255,255,255,0.3);
+            margin-top: 0.5rem; font-style: italic;
+        }
+
+        /* ── SCALE TIMELINE ── */
+        .timeline {
+            position: relative;
+            padding-left: 3rem;
+            margin-top: 2rem;
+        }
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 0.6rem; top: 0; bottom: 0;
+            width: 2px;
+            background: linear-gradient(to bottom, var(--accent), rgba(56,189,248,0.1));
+        }
+        .timeline-item {
+            position: relative;
+            margin-bottom: 2.5rem;
+        }
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -2.55rem; top: 0.3rem;
+            width: 12px; height: 12px;
+            border-radius: 50%;
+            background: var(--accent);
+            box-shadow: 0 0 12px rgba(56,189,248,0.5);
+        }
+        .timeline-item .phase {
+            font-size: 0.7rem; letter-spacing: 0.2em; text-transform: uppercase;
+            color: var(--accent); font-weight: 700; margin-bottom: 0.3rem;
+        }
+        .timeline-item h4 {
+            font-size: 1.1rem; font-weight: 700; margin-bottom: 0.3rem;
+        }
+        .timeline-item p {
+            font-size: 0.85rem; color: var(--muted);
+        }
+
+        /* ── CTA / NDA GATE ── */
+        #cta {
+            text-align: center;
+            padding: 8rem 2rem;
+            position: relative;
+        }
+        .cta-memo-card {
+            max-width: 420px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        .cta-memo-brand {
+            margin-bottom: 1rem;
+        }
+        .cta-memo-subtitle {
+            font-size: 0.9rem;
+            color: var(--muted);
+            margin-bottom: 2.5rem;
+            font-style: italic;
+        }
+        .cta-form {
+            max-width: 380px; margin: 0 auto;
+            display: flex; flex-direction: column; gap: 1rem;
+        }
+        .cta-form input, .cta-form select {
+            background: rgba(15,20,35,0.6);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 0.5rem;
+            padding: 0.95rem 1.2rem;
+            color: var(--text);
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9rem;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+        .cta-form input:focus, .cta-form select:focus {
+            border-color: rgba(255,255,255,0.3);
+        }
+        .cta-form input::placeholder { color: rgba(255,255,255,0.35); }
+        .cta-form select option { background: #0a0b10; }
+        .cta-btn {
+            background: linear-gradient(135deg, #1a3a8a, #2563eb);
+            color: #fff;
+            border: none;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            font-weight: 700;
+            font-size: 0.95rem;
+            letter-spacing: 0.04em;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 0.5rem;
+        }
+        .cta-btn:hover {
+            background: linear-gradient(135deg, #2563eb, #3b82f6);
+            box-shadow: 0 4px 20px rgba(37,99,235,0.4);
+        }
+        .cta-note {
+            font-size: 0.72rem;
+            color: rgba(255,255,255,0.35);
+            margin-top: 1.5rem;
+            line-height: 1.6;
+            max-width: 340px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* ── TEAM SECTION ── */
+        .team-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+        .team-card {
+            background: var(--glass);
+            border: 1px solid rgba(56,189,248,0.1);
+            border-radius: 1rem;
+            padding: 2rem;
+            text-align: center;
+            transition: border-color 0.3s, transform 0.3s;
+        }
+        .team-card:hover { border-color: var(--accent); transform: translateY(-4px); }
+        .team-card .avatar {
+            width: 80px; height: 80px; border-radius: 50%;
+            margin: 0 auto 1rem;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 2rem;
+        }
+        .team-card .avatar.filled { background: linear-gradient(135deg, var(--accent), #0ea5e9); color: #000; }
+        .team-card .avatar.open { border: 2px dashed var(--muted); color: var(--muted); }
+        .team-card h4 { font-size: 1.1rem; font-weight: 700; margin-bottom: 0.3rem; }
+        .team-card .role { font-size: 0.8rem; color: var(--accent); font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.5rem; }
+        .team-card .bio { font-size: 0.8rem; color: var(--muted); line-height: 1.5; }
+        .team-card .status { font-size: 0.65rem; color: var(--gold); text-transform: uppercase; letter-spacing: 0.15em; margin-top: 0.8rem; font-weight: 600; }
+
+        /* ── AI OPS SECTION ── */
+        .ai-features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+        .ai-card {
+            background: var(--glass);
+            border: 1px solid rgba(56,189,248,0.08);
+            border-radius: 1rem;
+            padding: 2rem;
+            text-align: center;
+            transition: border-color 0.3s;
+        }
+        .ai-card:hover { border-color: var(--accent); }
+        .ai-card .ai-icon { font-size: 2rem; margin-bottom: 1rem; color: var(--accent); }
+        .ai-card h4 { font-size: 1rem; font-weight: 700; margin-bottom: 0.5rem; }
+        .ai-card p { font-size: 0.8rem; color: var(--muted); }
+
+        /* ── MARKET SIZE ── */
+        .tam-ring {
+            display: flex; justify-content: center; gap: 2rem; flex-wrap: wrap;
+            margin-top: 2rem;
+        }
+        .tam-card {
+            background: var(--glass);
+            border: 1px solid rgba(56,189,248,0.1);
+            border-radius: 1rem;
+            padding: 2rem 2.5rem;
+            text-align: center;
+            min-width: 200px;
+        }
+        .tam-card .tam-val {
+            font-size: 2.5rem; font-weight: 900;
+            background: linear-gradient(135deg, #fff, var(--accent));
+            -webkit-background-clip: text; background-clip: text;
+            color: transparent;
+        }
+        .tam-card .tam-label { font-size: 0.7rem; color: var(--accent); text-transform: uppercase; letter-spacing: 0.15em; margin-top: 0.3rem; font-weight: 600; }
+        .tam-card .tam-desc { font-size: 0.75rem; color: var(--muted); margin-top: 0.5rem; }
+
+        /* ── BUSINESS MODEL ── */
+        .biz-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+        .biz-card {
+            background: var(--glass);
+            border: 1px solid rgba(245,158,11,0.15);
+            border-radius: 1rem;
+            padding: 2rem;
+            transition: border-color 0.3s;
+        }
+        .biz-card:hover { border-color: var(--gold); }
+        .biz-card .biz-icon { font-size: 1.5rem; color: var(--gold); margin-bottom: 1rem; }
+        .biz-card h4 { font-size: 1.1rem; font-weight: 700; margin-bottom: 0.5rem; }
+        .biz-card p { font-size: 0.85rem; color: var(--muted); line-height: 1.6; }
+        .biz-card .biz-highlight { color: var(--gold); font-weight: 700; }
+
+        /* ── THE ASK ── */
+        .ask-container {
+            max-width: 800px; margin: 0 auto;
+        }
+        .ask-amount {
+            text-align: center; margin-bottom: 3rem;
+        }
+        .ask-amount .amount {
+            font-size: clamp(2.5rem, 6vw, 4rem); font-weight: 900;
+            background: linear-gradient(135deg, var(--accent), var(--gold));
+            -webkit-background-clip: text; background-clip: text;
+            color: transparent;
+        }
+        .ask-amount .ask-sub { font-size: 0.9rem; color: var(--muted); margin-top: 0.5rem; }
+        .use-of-funds {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+        .fund-item {
+            background: var(--glass);
+            border: 1px solid rgba(56,189,248,0.1);
+            border-radius: 0.8rem;
+            padding: 1.5rem;
+            text-align: center;
+        }
+        .fund-item .fund-pct { font-size: 2rem; font-weight: 900; color: var(--accent); }
+        .fund-item .fund-label { font-size: 0.8rem; color: var(--text); margin-top: 0.3rem; font-weight: 600; }
+        .fund-item .fund-amount { font-size: 0.75rem; color: var(--muted); margin-top: 0.2rem; }
+
+        .milestone-track {
+            display: flex; justify-content: space-between; align-items: flex-start;
+            margin-top: 3rem; position: relative; flex-wrap: wrap; gap: 1rem;
+        }
+        .milestone-track::before {
+            content: ''; position: absolute; top: 20px; left: 5%; right: 5%;
+            height: 2px; background: linear-gradient(to right, var(--accent), var(--gold));
+            z-index: 0;
+        }
+        .milestone-node {
+            text-align: center; flex: 1; min-width: 120px; position: relative; z-index: 1;
+        }
+        .milestone-node .dot {
+            width: 16px; height: 16px; border-radius: 50%;
+            background: var(--accent); margin: 12px auto 0.8rem;
+            box-shadow: 0 0 12px rgba(56,189,248,0.5);
+        }
+        .milestone-node .ms-label { font-size: 0.75rem; font-weight: 700; color: var(--text); }
+        .milestone-node .ms-time { font-size: 0.65rem; color: var(--muted); margin-top: 0.2rem; }
+
+        /* ── COMPETITIVE LANDSCAPE ── */
+        .landscape-table {
+            width: 100%; border-collapse: collapse; margin-top: 2rem;
+        }
+        .landscape-table th {
+            text-align: left; padding: 1rem; font-size: 0.7rem;
+            letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted);
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+        .landscape-table td {
+            padding: 0.8rem 1rem; font-size: 0.85rem;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+        }
+        .landscape-table tr:last-child { background: rgba(56,189,248,0.05); }
+        .landscape-table tr:last-child td { color: var(--accent); font-weight: 600; }
+        .landscape-table .check { color: #22c55e; }
+        .landscape-table .cross { color: var(--danger); }
+        .landscape-table .partial { color: var(--gold); }
+
+        /* ── MASS BALANCE ── */
+        .mass-balance {
+            display: flex; align-items: center; justify-content: center;
+            gap: 1rem; margin-top: 2rem; flex-wrap: wrap;
+        }
+        .mb-box {
+            background: var(--glass);
+            border: 1px solid rgba(56,189,248,0.15);
+            border-radius: 0.8rem;
+            padding: 1.5rem 2rem;
+            text-align: center;
+            min-width: 160px;
+        }
+        .mb-box.input-box { border-color: rgba(239,68,68,0.3); }
+        .mb-box.process-box { border-color: rgba(56,189,248,0.4); background: rgba(56,189,248,0.05); }
+        .mb-box.output-box { border-color: rgba(34,197,94,0.3); }
+        .mb-box h4 { font-size: 0.9rem; font-weight: 700; margin-bottom: 0.5rem; }
+        .mb-box ul { list-style: none; padding: 0; }
+        .mb-box ul li { font-size: 0.75rem; color: var(--muted); padding: 0.2rem 0; }
+        .mb-arrow { font-size: 1.5rem; color: var(--accent); }
+
+        /* ── RISK MITIGATION ── */
+        .risk-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+        .risk-card {
+            background: var(--glass);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 1rem;
+            padding: 2rem;
+        }
+        .risk-card .concern { font-size: 0.9rem; font-weight: 700; color: var(--danger); margin-bottom: 0.8rem; }
+        .risk-card .concern i { margin-right: 0.5rem; }
+        .risk-card .answer { font-size: 0.85rem; color: var(--muted); line-height: 1.6; }
+        .risk-card .answer strong { color: var(--accent); }
+
+        /* ── CAREERS FOOTER ── */
+        .careers-section {
+            padding: 5rem 2rem 3rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .careers-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 1.2rem;
+            margin-top: 2rem;
+        }
+        .career-card {
+            background: var(--glass);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 0.8rem;
+            padding: 1.5rem;
+            transition: border-color 0.3s;
+        }
+        .career-card:hover { border-color: var(--accent); }
+        .career-card .career-title { font-size: 1rem; font-weight: 700; margin-bottom: 0.3rem; }
+        .career-card .career-type { font-size: 0.7rem; color: var(--accent); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.8rem; }
+        .career-card .career-scope { font-size: 0.8rem; color: var(--muted); line-height: 1.5; }
+        .career-card .career-tags { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.8rem; }
+        .career-card .career-tag {
+            font-size: 0.65rem; padding: 0.2rem 0.6rem;
+            border: 1px solid rgba(56,189,248,0.2); border-radius: 1rem;
+            color: var(--accent); text-transform: uppercase; letter-spacing: 0.05em;
+        }
+
+        /* ── FOOTER ── */
+        footer {
+            text-align: center;
+            padding: 3rem 2rem;
+            border-top: 1px solid rgba(255,255,255,0.04);
+        }
+        footer p {
+            font-size: 0.75rem; color: var(--muted);
+            letter-spacing: 0.1em;
+        }
+        footer .footer-links {
+            display: flex; justify-content: center; gap: 2rem;
+            margin-top: 1rem; flex-wrap: wrap;
+        }
+        footer .footer-links a {
+            color: var(--muted); text-decoration: none; font-size: 0.75rem;
+            transition: color 0.3s;
+        }
+        footer .footer-links a:hover { color: var(--accent); }
+
+        /* ── DIVIDER ── */
+        .section-divider {
+            width: 60px; height: 1px;
+            background: linear-gradient(to right, transparent, var(--accent), transparent);
+            margin: 0 auto;
+        }
+
+        /* ── RESPONSIVE ── */
+        @media (max-width: 768px) {
+            .nav-links { display: none !important; }
+            .section { padding: 5rem 1.5rem; }
+            .disaster-grid { grid-template-columns: 1fr; }
+            .membrane-stats { gap: 1.5rem; }
+            .compare-table { font-size: 0.8rem; }
+            .compare-table td, .compare-table th { padding: 0.7rem; }
+            .viewer-container { height: 350px; }
+        }
+
+        /* ── CLASSIFIED STAMP ── */
+        .classified {
+            display: inline-block;
+            border: 2px solid var(--accent);
+            padding: 0.3rem 1rem;
+            font-size: 0.65rem;
+            letter-spacing: 0.3em;
+            text-transform: uppercase;
+            color: var(--accent);
+            font-weight: 700;
+            border-radius: 0.2rem;
+            margin-bottom: 1rem;
+        }
+    
+/* ═══ TEAM SECTION ═══ */
+.team-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:1.5rem; margin-top:2.5rem; }
+.team-card { background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06); border-radius:16px; padding:2rem 1.5rem; text-align:center; transition:all .3s; }
+.team-card:hover { border-color:var(--accent); transform:translateY(-4px); box-shadow:0 8px 30px rgba(56,189,248,0.1); }
+.team-card .avatar { width:70px; height:70px; border-radius:50%; margin:0 auto 1rem; display:flex; align-items:center; justify-content:center; font-size:1.5rem; }
+.team-card .avatar.filled { background:linear-gradient(135deg,var(--accent),#6366f1); color:#fff; }
+.team-card .avatar.open { background:rgba(255,255,255,0.05); border:2px dashed rgba(255,255,255,0.15); color:var(--muted); }
+.team-card h4 { font-size:1.1rem; margin-bottom:0.3rem; color:#fff; }
+.team-card .role { font-size:0.8rem; color:var(--accent); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.8rem; }
+.team-card .bio { font-size:0.82rem; color:var(--muted); line-height:1.5; }
+.team-card .status { margin-top:0.8rem; font-size:0.75rem; color:var(--gold); font-weight:600; }
+
+/* ═══ TAM / MARKET ═══ */
+.tam-ring { display:flex; justify-content:center; gap:2rem; flex-wrap:wrap; margin-top:2.5rem; }
+.tam-card { background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06); border-radius:16px; padding:2rem; text-align:center; min-width:220px; flex:1; max-width:300px; transition:all .3s; }
+.tam-card:hover { border-color:var(--gold); transform:translateY(-4px); }
+.tam-val { font-size:2.5rem; font-weight:800; background:linear-gradient(135deg,var(--gold),#f97316); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+.tam-label { font-size:0.85rem; color:var(--accent); text-transform:uppercase; letter-spacing:0.1em; margin:0.3rem 0; font-weight:700; }
+.tam-desc { font-size:0.82rem; color:var(--muted); line-height:1.5; }
+
+/* ═══ BUSINESS MODEL ═══ */
+.biz-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:1.5rem; margin-top:2.5rem; }
+.biz-card { background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06); border-radius:16px; padding:2rem; transition:all .3s; }
+.biz-card:hover { border-color:var(--accent); transform:translateY(-4px); }
+.biz-icon { font-size:2rem; color:var(--accent); margin-bottom:1rem; }
+.biz-card h4 { font-size:1.1rem; margin-bottom:0.6rem; color:#fff; }
+.biz-card p { font-size:0.85rem; color:var(--muted); line-height:1.6; }
+.biz-highlight { color:var(--gold); font-weight:700; }
+
+/* ═══ THE ASK ═══ */
+.ask-amount { text-align:center; margin:2rem 0; }
+.ask-amount .amount { font-size:4rem; font-weight:900; background:linear-gradient(135deg,var(--accent),#6366f1); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+.ask-amount .ask-sub { font-size:1rem; color:var(--muted); margin-top:0.5rem; }
+.use-of-funds { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:1.2rem; margin:2.5rem auto; max-width:900px; }
+.fund-item { background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06); border-radius:12px; padding:1.5rem; text-align:center; transition:all .3s; }
+.fund-item:hover { border-color:var(--accent); }
+.fund-pct { font-size:2rem; font-weight:800; color:var(--accent); }
+.fund-label { font-size:0.85rem; color:#e2e8f0; margin:0.3rem 0; font-weight:600; }
+.fund-amount { font-size:0.8rem; color:var(--muted); }
+.milestone-track { display:flex; justify-content:space-between; align-items:flex-start; margin:3rem auto 0; max-width:900px; position:relative; flex-wrap:wrap; gap:1rem; }
+.milestone-track::before { content:''; position:absolute; top:12px; left:30px; right:30px; height:2px; background:linear-gradient(90deg,var(--accent),var(--gold)); z-index:0; }
+.milestone-node { text-align:center; flex:1; min-width:100px; position:relative; z-index:1; }
+.milestone-node .dot { width:24px; height:24px; border-radius:50%; background:var(--accent); margin:0 auto 0.6rem; box-shadow:0 0 10px rgba(56,189,248,0.4); }
+.ms-label { font-size:0.8rem; color:#e2e8f0; font-weight:600; }
+.ms-time { font-size:0.72rem; color:var(--muted); margin-top:0.2rem; }
+
+/* ═══ COMPETITIVE LANDSCAPE ═══ */
+.landscape-table { width:100%; border-collapse:collapse; margin-top:2rem; font-size:0.85rem; }
+.landscape-table th { background:rgba(56,189,248,0.1); color:var(--accent); padding:0.8rem; text-align:center; font-weight:700; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.05em; border-bottom:2px solid rgba(56,189,248,0.2); }
+.landscape-table th:first-child { text-align:left; }
+.landscape-table td { padding:0.7rem 0.8rem; text-align:center; border-bottom:1px solid rgba(255,255,255,0.04); color:var(--muted); }
+.landscape-table td:first-child { text-align:left; color:#e2e8f0; font-weight:500; }
+.landscape-table tr:last-child { background:rgba(56,189,248,0.05); }
+.landscape-table tr:last-child td { color:var(--accent); font-weight:700; border-bottom:2px solid rgba(56,189,248,0.2); }
+.landscape-table tr:hover { background:rgba(255,255,255,0.02); }
+.check { color:#22c55e; font-weight:bold; }
+.cross { color:#ef4444; }
+.partial { color:#f59e0b; }
+
+/* ═══ MASS BALANCE ═══ */
+.mass-balance { display:flex; align-items:stretch; justify-content:center; gap:1rem; margin-top:2.5rem; flex-wrap:wrap; }
+.mb-box { background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06); border-radius:16px; padding:1.5rem; flex:1; min-width:220px; max-width:320px; }
+.mb-box h4 { font-size:0.9rem; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:0.8rem; font-weight:700; }
+.mb-box ul { list-style:none; padding:0; margin:0; }
+.mb-box ul li { font-size:0.82rem; color:var(--muted); padding:0.3rem 0; line-height:1.5; }
+.mb-box ul li::before { content:'→ '; color:var(--accent); }
+.input-box { border-color:rgba(239,68,68,0.2); }
+.process-box { border-color:rgba(56,189,248,0.2); }
+.output-box { border-color:rgba(34,197,94,0.2); }
+.mb-arrow { display:flex; align-items:center; font-size:1.5rem; color:var(--accent); padding:0 0.5rem; }
+@media(max-width:768px) { .mb-arrow { transform:rotate(90deg); padding:0.5rem 0; } }
+
+/* ═══ RISK MITIGATION ═══ */
+.risk-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(320px,1fr)); gap:1.2rem; margin-top:2.5rem; }
+.risk-card { background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06); border-radius:14px; padding:1.5rem; transition:all .3s; }
+.risk-card:hover { border-color:var(--gold); transform:translateY(-3px); }
+.risk-card .concern { font-size:0.9rem; color:var(--gold); font-weight:700; margin-bottom:0.8rem; display:flex; align-items:flex-start; gap:0.5rem; }
+.risk-card .concern i { margin-top:0.15rem; }
+.risk-card .answer { font-size:0.82rem; color:var(--muted); line-height:1.6; }
+.risk-card .answer strong { color:#e2e8f0; }
+
+/* ═══ CAREERS ═══ */
+.careers-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:1.2rem; margin-top:2rem; }
+.career-card { background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06); border-radius:14px; padding:1.5rem; transition:all .3s; }
+.career-card:hover { border-color:var(--accent); transform:translateY(-3px); }
+.career-title { font-size:1rem; font-weight:700; color:#fff; margin-bottom:0.3rem; }
+.career-type { font-size:0.75rem; color:var(--accent); margin-bottom:0.6rem; }
+.career-scope { font-size:0.82rem; color:var(--muted); line-height:1.5; margin-bottom:0.6rem; }
+.career-tags { display:flex; gap:0.4rem; flex-wrap:wrap; }
+.career-tag { font-size:0.7rem; background:rgba(56,189,248,0.1); color:var(--accent); padding:0.2rem 0.6rem; border-radius:20px; }
+
+
+/* ═══ CETTS OFFICIAL BRAND FONT ═══ */
+.cetts-brand {
+    font-family: 'Playfair Display', Georgia, 'Times New Roman', serif !important;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    background: linear-gradient(180deg, #ffffff 0%, #c8d6e5 40%, #8395a7 70%, #576574 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    filter: drop-shadow(0 1px 2px rgba(0,0,0,0.3));
+}
+.brand {
+    font-family: 'Playfair Display', Georgia, 'Times New Roman', serif !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.06em !important;
+    background: linear-gradient(180deg, #ffffff 0%, #c8d6e5 40%, #8395a7 70%, #576574 100%) !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    background-clip: text !important;
+    font-size: 1.4rem !important;
+}
+
+</style>
+</head>
+<body>
+
+<!-- PRELOADER -->
+<div id="preloader">
+    <div class="logo-text"><span class="cetts-brand">CETTS</span></div>
+    <div class="tagline">Continuous Electrochemical Tailings Treatment System</div>
+    <div class="bar-track"><div class="bar-fill"></div></div>
+</div>
+
+<!-- NAV -->
+<nav id="mainNav">
+    <div class="brand"><span class="cetts-brand">CETTS</span></div>
+    <div class="nav-links">
+        <a href="#problem">Problem</a>
+        <a href="#cost">Cost</a>
+        <a href="#breakthrough">Breakthrough</a>
+        <a href="#system">System</a>
+        <a href="#proof">Proof</a>
+        <a href="#market">Market</a>
+        <a href="#team">Team</a>
+        <button class="nav-cta" onclick="document.getElementById('cta').scrollIntoView({behavior:'smooth'})">Request Access</button>
+    </div>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+    <div id="heroCanvas"></div>
+    <div class="hero-overlay"></div>
+    <div class="hero-content">
+        <div class="eyebrow">Classified Technology Brief</div>
+        <h1>What if mining's greatest <strong>liability</strong> became its greatest <strong>asset?</strong></h1>
+        <p class="hero-sub">A paradigm shift in tailings management. By invitation only.</p>
+    </div>
+    <div class="scroll-indicator">
+        <span>Scroll to begin</span>
+        <div class="scroll-line"></div>
+    </div>
+</section>
+
+<!-- SECTION 1: THE DISASTERS -->
+<section class="section" id="problem">
+    <div class="section-label">The Problem</div>
+    <div class="section-title">The industry is sitting on <strong>ticking time bombs</strong></div>
+    <div class="section-desc">Every major mining company carries billions in tailings liability. Some have already detonated.</div>
+
+    <div class="disaster-grid">
+        <div class="disaster-card">
+            <div class="year">January 25, 2019</div>
+            <h3>Brumadinho Dam</h3>
+            <div class="location">Minas Gerais, Brazil — Vale S.A.</div>
+            <div class="stat-row">
+                <div class="stat"><span class="num">270</span><span class="label">Lives Lost</span></div>
+                <div class="stat"><span class="num">$7B+</span><span class="label">Total Cost</span></div>
+                <div class="stat"><span class="num">12M m³</span><span class="label">Waste Released</span></div>
+            </div>
+        </div>
+        <div class="disaster-card">
+            <div class="year">November 5, 2015</div>
+            <h3>Samarco Dam</h3>
+            <div class="location">Mariana, Brazil — BHP / Vale JV</div>
+            <div class="stat-row">
+                <div class="stat"><span class="num">19</span><span class="label">Lives Lost</span></div>
+                <div class="stat"><span class="num">$5.2B</span><span class="label">Settlement</span></div>
+                <div class="stat"><span class="num">60M m³</span><span class="label">Waste Released</span></div>
+            </div>
+        </div>
+        <div class="disaster-card">
+            <div class="year">August 4, 2014</div>
+            <h3>Mount Polley</h3>
+            <div class="location">British Columbia, Canada — Imperial Metals</div>
+            <div class="stat-row">
+                <div class="stat"><span class="num">25M m³</span><span class="label">Waste Released</span></div>
+                <div class="stat"><span class="num">$40M+</span><span class="label">Cleanup Cost</span></div>
+                <div class="stat"><span class="num">∞</span><span class="label">Ecosystem Damage</span></div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- SECTION 2: THE COST OF DOING NOTHING -->
+<section class="section cost-section" id="cost">
+    <div class="section-label">The Cost of Inaction</div>
+    <div class="section-title">Global tailings liability — <strong>right now</strong></div>
+    <div class="cost-counter" id="costCounter">$0</div>
+    <div class="cost-label">And growing every second. Maintenance. Monitoring. Insurance. Perpetuity.</div>
+
+    <div style="max-width:800px; margin:4rem auto 0;">
+        <table class="compare-table">
+            <thead>
+                <tr>
+                    <th>Cost Category</th>
+                    <th>Current Method</th>
+                    <th><span class="cetts-brand">CETTS</span></th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Tailings dam construction</td>
+                    <td>$500M – $2B+</td>
+                    <td>$0 — No dam needed</td>
+                </tr>
+                <tr>
+                    <td>Annual dam maintenance</td>
+                    <td>$10 – 50M / year</td>
+                    <td>$0</td>
+                </tr>
+                <tr>
+                    <td>Chemical treatment (AMD)</td>
+                    <td>$2,000 – 5,000 / ton</td>
+                    <td>$200 – 400 / ton</td>
+                </tr>
+                <tr>
+                    <td>Environmental monitoring</td>
+                    <td>$5 – 20M / year</td>
+                    <td>Minimal — closed loop</td>
+                </tr>
+                <tr>
+                    <td>Dam failure liability</td>
+                    <td>$1 – 10B on balance sheet</td>
+                    <td>$0</td>
+                </tr>
+                <tr>
+                    <td>Post-closure care</td>
+                    <td>$50 – 500M (perpetuity NPV)</td>
+                    <td>$0 — Nothing to close</td>
+                </tr>
+                <tr>
+                    <td>Recovered metal value</td>
+                    <td>$0 — Locked in tailings</td>
+                    <td>Revenue stream</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- SECTION 3: THE IMPOSSIBLE PROBLEM -->
+<section class="section" id="impossible">
+    <div class="section-label">The Bottleneck</div>
+    <div class="section-title">Electrochemistry could always do this.<br><strong>One component made it impossible.</strong></div>
+    <div class="section-desc">The science has existed for decades. Every metallurgist knows it works. But the economics never did — because of one thing.</div>
+
+    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px,1fr)); gap:1.5rem; margin-top:2rem;">
+        <div class="proof-card">
+            <div class="proof-val" style="color:var(--danger);">$500–800</div>
+            <div class="proof-label">Per m² — Nafion 117</div>
+            <div class="proof-context">Industry standard membrane</div>
+        </div>
+        <div class="proof-card">
+            <div class="proof-val" style="color:var(--danger);">$150–300</div>
+            <div class="proof-label">Per m² — Fumasep</div>
+            <div class="proof-context">Budget alternative</div>
+        </div>
+        <div class="proof-card">
+            <div class="proof-val" style="color:var(--danger);">Months</div>
+            <div class="proof-label">Lifespan in mine chemistry</div>
+            <div class="proof-context">Degrades in extreme pH / ORP</div>
+        </div>
+    </div>
+
+    <div style="text-align:center; margin-top:3rem; color:var(--muted); font-size:0.95rem;">
+        At these prices, the math <strong style="color:var(--danger);">never works</strong> at scale.<br>
+        <span style="font-size:0.8rem;">This is why electrochemical treatment has never been deployed in mining. Until now.</span>
+    </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- SECTION 4: THE BREAKTHROUGH — MEMBRANE -->
+<section class="section membrane-reveal" id="breakthrough">
+    <div class="classified">PROPRIETARY</div>
+    <div class="section-label">The Breakthrough</div>
+    <div class="section-title" style="max-width:700px; margin:0 auto 1rem;">We didn't invent electrochemistry.<br><strong>We removed the barrier.</strong></div>
+    <div class="section-desc" style="max-width:500px; margin:0 auto 2rem; text-align:center;">
+        A proprietary nano membrane. 100x cost reduction. Proven in extreme chemistry. The details are not on this page.
+    </div>
+
+    <div class="membrane-glow">
+        <i class="fas fa-atom" style="font-size:2rem; color:var(--accent); z-index:1; position:relative;"></i>
+    </div>
+
+    <div class="membrane-stats">
+        <div class="membrane-stat">
+            <div class="val">100×</div>
+            <div class="lbl">Cost Reduction</div>
+        </div>
+        <div class="membrane-stat">
+            <div class="val">pH 0</div>
+            <div class="lbl">Acid Survival</div>
+        </div>
+        <div class="membrane-stat">
+            <div class="val"><$5</div>
+            <div class="lbl">Per m² Production Cost</div>
+        </div>
+        <div class="membrane-stat">
+            <div class="val">∞</div>
+            <div class="lbl">Field Replaceable</div>
+        </div>
+    </div>
+
+    <p style="margin-top:3rem; font-size:0.8rem; color:var(--muted); text-align:center;">
+        Full technical specifications available under NDA to qualified partners.
+    </p>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- SECTION 5: <span class="cetts-brand">CETTS</span> IN ACTION — 3D -->
+<section class="section" id="system">
+    <div class="section-label">The System</div>
+    <div class="section-title"><span class="cetts-brand">CETTS</span> — <strong>Containerized. Modular. Deployable.</strong></div>
+    <div class="section-desc">Feed tailings in. Recover metals and clean water out. Zero discharge. Fits in a shipping container.</div>
+
+    <div class="viewer-container" id="mainViewer">
+        <div class="viewer-badge"><i class="fas fa-cube"></i>  Interactive 3D — Drag to rotate</div>
+    </div>
+
+    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px,1fr)); gap:1rem; margin-top:2rem;">
+        <div class="proof-card" style="border-color:rgba(56,189,248,0.15);">
+            <div class="proof-val" style="font-size:1.5rem;">20ft</div>
+            <div class="proof-label">Container Footprint</div>
+        </div>
+        <div class="proof-card" style="border-color:rgba(56,189,248,0.15);">
+            <div class="proof-val" style="font-size:1.5rem;">Continuous</div>
+            <div class="proof-label">Operation Mode</div>
+        </div>
+        <div class="proof-card" style="border-color:rgba(56,189,248,0.15);">
+            <div class="proof-val" style="font-size:1.5rem;">Zero</div>
+            <div class="proof-label">Waste Discharge</div>
+        </div>
+        <div class="proof-card" style="border-color:rgba(56,189,248,0.15);">
+            <div class="proof-val" style="font-size:1.5rem;">SCADA</div>
+            <div class="proof-label">Ready Integration</div>
+        </div>
+    </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- SECTION 6: WHAT COMES OUT -->
+<section class="section" id="recovery">
+    <div class="section-label">Value Recovery</div>
+    <div class="section-title">Your waste is worth more than <strong>some mines</strong></div>
+    <div class="section-desc"><span class="cetts-brand">CETTS</span> recovers marketable metals from tailings that conventional methods leave behind.</div>
+
+    <div class="metals-grid">
+        <div class="metal-card">
+            <div class="symbol">Cu</div>
+            <div class="name">Copper</div>
+            <div class="price">$8,500/t</div>
+        </div>
+        <div class="metal-card">
+            <div class="symbol">Au</div>
+            <div class="name">Gold</div>
+            <div class="price">$2,300/oz</div>
+        </div>
+        <div class="metal-card">
+            <div class="symbol">Ni</div>
+            <div class="name">Nickel</div>
+            <div class="price">$16,000/t</div>
+        </div>
+        <div class="metal-card">
+            <div class="symbol">Co</div>
+            <div class="name">Cobalt</div>
+            <div class="price">$33,000/t</div>
+        </div>
+        <div class="metal-card">
+            <div class="symbol">Pt</div>
+            <div class="name">Platinum</div>
+            <div class="price">$950/oz</div>
+        </div>
+        <div class="metal-card">
+            <div class="symbol">REE</div>
+            <div class="name">Rare Earths</div>
+            <div class="price">Critical</div>
+        </div>
+    </div>
+
+    <p style="text-align:center; margin-top:2rem; font-size:0.85rem; color:var(--muted);">
+        Recovery rates and target metals are tailings-chemistry dependent. Site-specific models available under NDA.
+    </p>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- SECTION 7: THE PROOF -->
+<section class="section" id="proof">
+    <div class="section-label">Validated Performance</div>
+    <div class="section-title">Real data. <strong>Not projections.</strong></div>
+    <div class="section-desc">Independent electrochemical testing confirms performance across key metrics.</div>
+
+    <div class="proof-grid">
+        <div class="proof-card">
+            <div class="proof-val">5–6V</div>
+            <div class="proof-label">Cell Voltage</div>
+            <div class="proof-context">Energy efficient operation</div>
+        </div>
+        <div class="proof-card">
+            <div class="proof-val">50A</div>
+            <div class="proof-label">Current Capacity</div>
+            <div class="proof-context">Per cell module</div>
+        </div>
+        <div class="proof-card">
+            <div class="proof-val">$200–400</div>
+            <div class="proof-label">Cost Per Ton</div>
+            <div class="proof-context">vs. $2,000–5,000 conventional</div>
+        </div>
+        <div class="proof-card">
+            <div class="proof-val">pH 0</div>
+            <div class="proof-label">Membrane Survival</div>
+            <div class="proof-context">Extreme acid resistance proven</div>
+        </div>
+        <div class="proof-card">
+            <div class="proof-val">0</div>
+            <div class="proof-label">Waste Stream</div>
+            <div class="proof-context">Closed-loop acid regeneration</div>
+        </div>
+        <div class="proof-card">
+            <div class="proof-val">RT</div>
+            <div class="proof-label">Operating Temp</div>
+            <div class="proof-context">Room temperature processing</div>
+        </div>
+    </div>
+
+    <div style="text-align:center; margin-top:2rem;">
+        <canvas id="costChart" style="max-width:600px; max-height:300px; margin:0 auto;"></canvas>
+    </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- SECTION 8: SCALE PATH -->
+<section class="section" id="scale">
+    <div class="section-label">Deployment Roadmap</div>
+    <div class="section-title">From <strong>one skid</strong> to <strong>site-wide deployment</strong></div>
+    <div class="section-desc">Modular architecture means linear scaling. Add capacity like shipping containers.</div>
+
+    <div class="timeline">
+        <div class="timeline-item">
+            <div class="phase">Phase 1 — Now</div>
+            <h4>Pilot Unit</h4>
+            <p>Single containerized skid. 90-day on-site validation with partner mine. Prove economics on real tailings.</p>
+        </div>
+        <div class="timeline-item">
+            <div class="phase">Phase 2 — Month 6</div>
+            <h4>Multi-Skid Array</h4>
+            <p>4–8 units in parallel. Process 50–200 tons/day. Full SCADA integration. Continuous metal recovery.</p>
+        </div>
+        <div class="timeline-item">
+            <div class="phase">Phase 3 — Year 1</div>
+            <h4>Site-Wide Deployment</h4>
+            <p>20+ units. Integrated with existing plant infrastructure. Tailings-to-revenue conversion at industrial scale.</p>
+        </div>
+        <div class="timeline-item">
+            <div class="phase">Phase 4 — Year 2+</div>
+            <h4>Licensed Deployment</h4>
+            <p>Technology licensing to Tier 1 miners globally. Regional manufacturing partnerships. Legacy tailings remediation contracts.</p>
+        </div>
+    </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- SECTION: TEAM & ADVISORY -->
+<section class="section" id="team">
+    <div class="section-label">The Team</div>
+    <div class="section-title">Built by people who <strong>know the chemistry</strong></div>
+    <div class="section-desc">Deep electrochemistry expertise. Open-source ethos. Mining industry connections.</div>
+
+    <div class="team-grid">
+        <div class="team-card">
+            <div class="avatar filled"><i class="fas fa-flask"></i></div>
+            <h4>Robert Karas</h4>
+            <div class="role">Founder & CTO</div>
+            <div class="bio">Inventor of the open-source ion exchange membrane. Patent holder (App #19/531,984). Years of hands-on electrochemical cell design, testing, and iteration. Built working units from scratch.</div>
+        </div>
+        <div class="team-card">
+            <div class="avatar open"><i class="fas fa-hard-hat"></i></div>
+            <h4>Chief Operating Officer</h4>
+            <div class="role">Operations & Scale-Up</div>
+            <div class="bio">Seeking: 15+ years mining operations. Experience scaling pilot tech to full plant. Understands permitting, EHS, and Tier 1 mine site protocols.</div>
+            <div class="status"><i class="fas fa-search"></i> Actively Recruiting</div>
+        </div>
+        <div class="team-card">
+            <div class="avatar open"><i class="fas fa-chart-line"></i></div>
+            <h4>VP Business Development</h4>
+            <div class="role">Mining Partnerships</div>
+            <div class="bio">Seeking: Deep relationships with Tier 1 mining companies. Experience structuring technology licensing, JVs, and processing agreements.</div>
+            <div class="status"><i class="fas fa-search"></i> Actively Recruiting</div>
+        </div>
+        <div class="team-card">
+            <div class="avatar open"><i class="fas fa-microscope"></i></div>
+            <h4>Lead Metallurgist</h4>
+            <div class="role">Process Engineering</div>
+            <div class="bio">Seeking: Hydrometallurgy / electrochemistry PhD or equivalent. Experience with membrane processes, metal recovery, and pilot plant commissioning.</div>
+            <div class="status"><i class="fas fa-search"></i> Actively Recruiting</div>
+        </div>
+    </div>
+    <div style="text-align:center; margin-top:2rem;">
+        <p style="font-size:0.85rem; color:var(--muted);">Advisory board positions open for: Mining executives · ESG/sustainability leaders · Electrochemistry professors</p>
+    </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- SECTION: MARKET SIZE -->
+<section class="section" id="market">
+    <div class="section-label">Market Opportunity</div>
+    <div class="section-title">A <strong>$50B+ problem</strong> waiting for a solution</div>
+    <div class="section-desc">Tailings management is the largest unfunded liability in mining. And it's growing.</div>
+
+    <div class="tam-ring">
+        <div class="tam-card">
+            <div class="tam-val">$50B+</div>
+            <div class="tam-label">TAM</div>
+            <div class="tam-desc">Global tailings liability — dam maintenance, monitoring, remediation, post-closure costs</div>
+        </div>
+        <div class="tam-card">
+            <div class="tam-val">$12B</div>
+            <div class="tam-label">SAM</div>
+            <div class="tam-desc">Active tailings treatment & metal recovery from waste streams</div>
+        </div>
+        <div class="tam-card">
+            <div class="tam-val">$2B</div>
+            <div class="tam-label">SOM</div>
+            <div class="tam-desc">Electrochemical treatment deployments — Year 5 target with licensing model</div>
+        </div>
+    </div>
+
+    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(250px,1fr)); gap:1.5rem; margin-top:3rem;">
+        <div class="proof-card" style="border-color:rgba(245,158,11,0.2);">
+            <div class="proof-val" style="color:var(--gold);">18,000+</div>
+            <div class="proof-label">Active Tailings Dams Globally</div>
+            <div class="proof-context">Source: GRID-Arendal / UNEP</div>
+        </div>
+        <div class="proof-card" style="border-color:rgba(245,158,11,0.2);">
+            <div class="proof-val" style="color:var(--gold);">$1.6T</div>
+            <div class="proof-label">Critical Minerals Demand by 2030</div>
+            <div class="proof-context">IEA World Energy Outlook</div>
+        </div>
+        <div class="proof-card" style="border-color:rgba(245,158,11,0.2);">
+            <div class="proof-val" style="color:var(--gold);">GISTM</div>
+            <div class="proof-label">Global Industry Standard</div>
+            <div class="proof-context">Mandatory compliance driving spend</div>
+        </div>
+    </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- SECTION: BUSINESS MODEL -->
+<section class="section" id="business">
+    <div class="section-label">Business Model</div>
+    <div class="section-title">Three revenue streams. <strong>One platform.</strong></div>
+    <div class="section-desc">Capital-light model with recurring revenue and metal upside.</div>
+
+    <div class="biz-grid">
+        <div class="biz-card">
+            <div class="biz-icon"><i class="fas fa-file-contract"></i></div>
+            <h4>Technology Licensing</h4>
+            <p>License the membrane + cell stack design to mining companies and EPCs. <span class="biz-highlight">$2–5M per site license</span> + annual royalty on throughput.</p>
+        </div>
+        <div class="biz-card">
+            <div class="biz-icon"><i class="fas fa-cogs"></i></div>
+            <h4>Treatment-as-a-Service</h4>
+            <p>Deploy <span class="cetts-brand">CETTS</span> units on-site. Charge per ton of tailings processed. <span class="biz-highlight">$200–400/ton</span> vs. $2,000–5,000 conventional. Mine pays nothing upfront.</p>
+        </div>
+        <div class="biz-card">
+            <div class="biz-icon"><i class="fas fa-coins"></i></div>
+            <h4>Metal Revenue Share</h4>
+            <p>Recovered metals (Cu, Au, Ni, Co, REE) sold at market. <span class="biz-highlight">Revenue share with mine operator.</span> Turns cost center into profit center.</p>
+        </div>
+    </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- SECTION: COMPETITIVE LANDSCAPE -->
+<section class="section" id="competitive">
+    <div class="section-label">Competitive Landscape</div>
+    <div class="section-title">Why existing solutions <strong>don't cut it</strong></div>
+    <div class="section-desc">Every alternative either costs too much, creates new waste, or can't recover metals.</div>
+
+    <div style="overflow-x:auto;">
+    <table class="landscape-table">
+        <thead>
+            <tr>
+                <th>Approach</th>
+                <th>Metal Recovery</th>
+                <th>Zero Waste</th>
+                <th>Cost/Ton</th>
+                <th>Scalable</th>
+                <th>No Dam Needed</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Tailings Dams</td>
+                <td><span class="cross"><i class="fas fa-times"></i></span></td>
+                <td><span class="cross"><i class="fas fa-times"></i></span></td>
+                <td>$2,000–5,000</td>
+                <td><span class="check"><i class="fas fa-check"></i></span></td>
+                <td><span class="cross"><i class="fas fa-times"></i></span></td>
+            </tr>
+            <tr>
+                <td>Dry Stacking</td>
+                <td><span class="cross"><i class="fas fa-times"></i></span></td>
+                <td><span class="partial"><i class="fas fa-minus"></i></span></td>
+                <td>$1,500–3,000</td>
+                <td><span class="check"><i class="fas fa-check"></i></span></td>
+                <td><span class="check"><i class="fas fa-check"></i></span></td>
+            </tr>
+            <tr>
+                <td>Lime Neutralization</td>
+                <td><span class="cross"><i class="fas fa-times"></i></span></td>
+                <td><span class="cross"><i class="fas fa-times"></i></span></td>
+                <td>$800–2,000</td>
+                <td><span class="check"><i class="fas fa-check"></i></span></td>
+                <td><span class="partial"><i class="fas fa-minus"></i></span></td>
+            </tr>
+            <tr>
+                <td>Bioleaching</td>
+                <td><span class="partial"><i class="fas fa-minus"></i></span></td>
+                <td><span class="cross"><i class="fas fa-times"></i></span></td>
+                <td>$500–1,500</td>
+                <td><span class="partial"><i class="fas fa-minus"></i></span></td>
+                <td><span class="check"><i class="fas fa-check"></i></span></td>
+            </tr>
+            <tr>
+                <td>Conventional Electrodialysis</td>
+                <td><span class="check"><i class="fas fa-check"></i></span></td>
+                <td><span class="check"><i class="fas fa-check"></i></span></td>
+                <td>$3,000–8,000</td>
+                <td><span class="cross"><i class="fas fa-times"></i></span></td>
+                <td><span class="check"><i class="fas fa-check"></i></span></td>
+            </tr>
+            <tr>
+                <td><strong><span class="cetts-brand">CETTS</span></strong></td>
+                <td><span class="check"><i class="fas fa-check"></i></span></td>
+                <td><span class="check"><i class="fas fa-check"></i></span></td>
+                <td><strong style="color:var(--accent);">$200–400</strong></td>
+                <td><span class="check"><i class="fas fa-check"></i></span></td>
+                <td><span class="check"><i class="fas fa-check"></i></span></td>
+            </tr>
+        </tbody>
+    </table>
+    </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- SECTION: MASS BALANCE -->
+<section class="section" id="massbalance">
+    <div class="section-label">Process Flow</div>
+    <div class="section-title">What goes in. <strong>What comes out.</strong></div>
+    <div class="section-desc">Closed-loop system. Acids regenerated. Zero discharge.</div>
+
+    <div class="mass-balance">
+        <div class="mb-box input-box">
+            <h4 style="color:#ef4444;">INPUT</h4>
+            <ul>
+                <li>Mine tailings slurry</li>
+                <li>HCl + NaClO₃ (leach agent)</li>
+                <li>Electricity (5–6V DC)</li>
+                <li>Water (makeup only)</li>
+            </ul>
+        </div>
+        <div class="mb-arrow"><i class="fas fa-arrow-right"></i></div>
+        <div class="mb-box process-box">
+            <h4 style="color:var(--accent);"><span class="cetts-brand">CETTS</span> PROCESS</h4>
+            <ul>
+                <li>Electrochemical dissolution</li>
+                <li>Selective ion migration</li>
+                <li>Membrane separation</li>
+                <li>Electrodeposition</li>
+                <li>Acid regeneration loop</li>
+            </ul>
+        </div>
+        <div class="mb-arrow"><i class="fas fa-arrow-right"></i></div>
+        <div class="mb-box output-box">
+            <h4 style="color:#22c55e;">OUTPUT</h4>
+            <ul>
+                <li>Pure metal cathodes (Cu, Au, Ni…)</li>
+                <li>Clean water (reusable)</li>
+                <li>Inert mineral residue</li>
+                <li>Regenerated acids (recycled)</li>
+                <li><strong>Zero liquid discharge</strong></li>
+            </ul>
+        </div>
+    </div>
+</section>
+
+
+
+<!-- SECTION: RISK MITIGATION -->
+<section class="section" id="risks">
+    <div class="section-label">We Know What You're Thinking</div>
+    <div class="section-title">Every hard question. <strong>Answered.</strong></div>
+    <div class="section-desc">We've heard these concerns. Here's how we address them.</div>
+
+    <div class="risk-grid">
+        <div class="risk-card">
+            <div class="concern"><i class="fas fa-exclamation-triangle"></i> "Has this been independently validated?"</div>
+            <div class="answer">Bench-scale testing confirms core electrochemistry. Seed funding enables <strong>third-party validation at SGS or ALS</strong> within 9 months. We welcome skepticism — that's why we're raising.</div>
+        </div>
+        <div class="risk-card">
+            <div class="concern"><i class="fas fa-exclamation-triangle"></i> "Can a DIY membrane work at industrial scale?"</div>
+            <div class="answer">The membrane uses <strong>water softener resin + PVC cement + fiberglass</strong> — all industrial-grade materials. The recipe is open-source and reproducible. Scale-up is about cell stack engineering, not membrane chemistry.</div>
+        </div>
+        <div class="risk-card">
+            <div class="concern"><i class="fas fa-exclamation-triangle"></i> "What about membrane longevity?"</div>
+            <div class="answer">Current membranes cost <strong>&lt;$5/m²</strong> and are field-replaceable in minutes. Even if lifespan is 6 months, replacement cost is negligible vs. Nafion at $500–800/m². Economics work even with frequent replacement.</div>
+        </div>
+        <div class="risk-card">
+            <div class="concern"><i class="fas fa-exclamation-triangle"></i> "This is a one-person operation."</div>
+            <div class="answer">Today, yes. That's the point of this raise — to build the team. The <strong>science is proven</strong>. What's needed is engineering scale-up, which is a solved problem in electrochemistry. We're hiring metallurgists and process engineers.</div>
+        </div>
+        <div class="risk-card">
+            <div class="concern"><i class="fas fa-exclamation-triangle"></i> "What's the IP position?"</div>
+            <div class="answer">Non-provisional utility patent filed (<strong>App #19/531,984</strong>). The membrane recipe is open-source by design — our moat is the <strong>integrated system design, process control IP, and first-mover deployment data</strong>.</div>
+        </div>
+        <div class="risk-card">
+            <div class="concern"><i class="fas fa-exclamation-triangle"></i> "Why open-source the membrane?"</div>
+            <div class="answer">Inspired by the RepRap model. Open-sourcing the membrane <strong>grows the ecosystem</strong> and proves the technology faster. Our value is in the complete system — not a single component. Open membrane = faster adoption = bigger market for CETTS.</div>
+        </div>
+    </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- SECTION: CAREERS -->
+<section class="section" id="careers">
+    <div class="section-label">Join the Mission</div>
+    <div class="section-title">We're building the team to <strong>change mining forever</strong></div>
+    <div class="section-desc">Open positions for people who want to make a real impact.</div>
+
+    <div class="careers-grid">
+        <div class="career-card">
+            <div class="career-title">Process Engineer — Electrochemistry</div>
+            <div class="career-type">Full-time · On-site / Hybrid</div>
+            <div class="career-scope">Design and optimize electrochemical cell stacks. Run pilot plant operations. Analyze membrane performance data.</div>
+            <div class="career-tags"><span class="career-tag">Electrochemistry</span><span class="career-tag">Process</span><span class="career-tag">R&D</span></div>
+        </div>
+        <div class="career-card">
+            <div class="career-title">Metallurgist — Hydrometallurgy</div>
+            <div class="career-type">Full-time · On-site</div>
+            <div class="career-scope">Lead metal recovery optimization. Develop selective dissolution protocols for different ore types and tailings compositions.</div>
+            <div class="career-tags"><span class="career-tag">Metallurgy</span><span class="career-tag">Hydro</span><span class="career-tag">Recovery</span></div>
+        </div>
+        <div class="career-card">
+            <div class="career-title">Business Development Lead</div>
+            <div class="career-type">Full-time · Remote</div>
+            <div class="career-scope">Build relationships with Tier 1 mining companies. Structure licensing and processing agreements.</div>
+            <div class="career-tags"><span class="career-tag">Mining</span><span class="career-tag">BD</span><span class="career-tag">Licensing</span></div>
+        </div>
+    </div>
+</section>
+
+<div class="section-divider"></div>
+
+
+
+<!-- SECTION 9: THE QUESTION / CTA -->
+<section class="section" id="cta">
+    <div class="section-title" style="text-align:center;">Your competitors are already <strong>asking about this.</strong></div>
+    <div class="cta-sub" style="text-align:center; font-size:0.9rem; color:var(--muted); margin-bottom:3rem;">Are you?</div>
+
+    <div class="cta-memo-card">
+        <div class="cta-memo-brand"><span class="cetts-brand" style="font-size:2.5rem;">CETTS</span></div>
+        <div class="cta-memo-subtitle">Confidential Investor Memorandum — March 2026</div>
+
+        <div class="cta-form">
+            <input type="text" placeholder="Full Name" required>
+            <input type="email" placeholder="Corporate Email" required>
+            <input type="text" placeholder="Company">
+            <select>
+                <option value="" disabled selected>Your Role</option>
+                <option>C-Suite / Board</option>
+                <option>VP Operations</option>
+                <option>VP Sustainability / ESG</option>
+                <option>Head of Metallurgy</option>
+                <option>Business Development</option>
+                <option>Investor</option>
+                <option>Other</option>
+            </select>
+            <button class="cta-btn" type="button" onclick="alert('Thank you. Our team will review your request and respond within 48 hours.')">Access Document</button>
+        </div>
+        <div class="cta-note">
+            By accessing this document, you acknowledge that it contains confidential information intended solely for the named recipient. Unauthorized distribution is prohibited.
+        </div>
+    </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+    <p>© 2025 <span class="cetts-brand">CETTS</span> — Continuous Electrochemical Tailings Treatment System. All rights reserved.</p>
+    <p style="margin-top:0.5rem; font-size:0.65rem; color:rgba(255,255,255,0.15);">Patent pending. Proprietary technology.</p>
+</footer>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- SCRIPTS -->
+<!-- ═══════════════════════════════════════════ -->
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+// ── PRELOADER ──
+window.addEventListener('load', () => {
+    setTimeout(() => {
+        document.getElementById('preloader').classList.add('hidden');
+    }, 3500);
+});
+
+// ── NAV SCROLL ──
+window.addEventListener('scroll', () => {
+    document.getElementById('mainNav').classList.toggle('scrolled', window.scrollY > 50);
+});
+
+// ── SECTION REVEAL ──
+const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+        if (e.isIntersecting) e.target.classList.add('visible');
+    });
+}, { threshold: 0.1 });
+document.querySelectorAll('.section').forEach(s => observer.observe(s));
+
+// ── COST COUNTER ──
+function animateCounter() {
+    const el = document.getElementById('costCounter');
+    const target = 50; // $50B
+    const observer2 = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting) {
+            let current = 0;
+            const step = target / 80;
+            const interval = setInterval(() => {
+                current += step;
+                if (current >= target) { current = target; clearInterval(interval); }
+                el.textContent = '$' + current.toFixed(1) + 'B+';
+            }, 30);
+            observer2.disconnect();
+        }
+    }, { threshold: 0.3 });
+    observer2.observe(el);
+}
+animateCounter();
+
+// ── COST CHART ──
+const costCtx = document.getElementById('costChart');
+if (costCtx) {
+    new Chart(costCtx, {
+        type: 'bar',
+        data: {
+            labels: ['Dam Construction', 'Annual Maintenance', 'Treatment ($/ton)', 'Monitoring ($/yr)', 'Failure Liability', 'Post-Closure NPV'],
+            datasets: [
+                {
+                    label: 'Conventional',
+                    data: [1000, 30, 3500, 12, 5000, 275],
+                    backgroundColor: 'rgba(239,68,68,0.7)',
+                    borderRadius: 4,
+                },
+                {
+                    label: 'CETTS',
+                    data: [0.5, 0.5, 300, 1, 0, 0],
+                    backgroundColor: 'rgba(56,189,248,0.7)',
+                    borderRadius: 4,
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { labels: { color: '#94a3b8', font: { size: 11 } } },
+                title: {
+                    display: true,
+                    text: 'Cost Comparison ($M or $/ton as labeled)',
+                    color: '#64748b',
+                    font: { size: 12 }
+                }
+            },
+            scales: {
+                x: { ticks: { color: '#64748b', font: { size: 10 } }, grid: { color: 'rgba(255,255,255,0.03)' } },
+                y: { ticks: { color: '#64748b' }, grid: { color: 'rgba(255,255,255,0.05)' } }
+            }
+        }
+    });
+}
+
+// ── HERO 3D SCENE ──
+function initHero() {
+    const container = document.getElementById('heroCanvas');
+    if (!container) return;
+
+    const scene = new THREE.Scene();
+    scene.fog = new THREE.FogExp2(0x050508, 0.15);
+
+    const camera = new THREE.PerspectiveCamera(60, container.clientWidth / container.clientHeight, 0.1, 100);
+    camera.position.set(0, 0, 4);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setSize(container.clientWidth, container.clientHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setClearColor(0x050508, 1);
+    container.appendChild(renderer.domElement);
+
+    // Particle field
+    const particleCount = 1500;
+    const positions = new Float32Array(particleCount * 3);
+    const velocities = [];
+    for (let i = 0; i < particleCount; i++) {
+        positions[i * 3] = (Math.random() - 0.5) * 20;
+        positions[i * 3 + 1] = (Math.random() - 0.5) * 20;
+        positions[i * 3 + 2] = (Math.random() - 0.5) * 20;
+        velocities.push({
+            x: (Math.random() - 0.5) * 0.002,
+            y: (Math.random() - 0.5) * 0.002,
+            z: (Math.random() - 0.5) * 0.002
+        });
+    }
+    const particleGeo = new THREE.BufferGeometry();
+    particleGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    const particleMat = new THREE.PointsMaterial({
+        color: 0x38bdf8,
+        size: 0.03,
+        transparent: true,
+        opacity: 0.6,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false
+    });
+    const particles = new THREE.Points(particleGeo, particleMat);
+    scene.add(particles);
+
+    // Central glowing orb (the membrane — mysterious)
+    const orbGeo = new THREE.SphereGeometry(0.5, 64, 64);
+    const orbMat = new THREE.MeshBasicMaterial({
+        color: 0x38bdf8,
+        transparent: true,
+        opacity: 0.15,
+    });
+    const orb = new THREE.Mesh(orbGeo, orbMat);
+    scene.add(orb);
+
+    // Orb rings
+    for (let i = 0; i < 3; i++) {
+        const ringGeo = new THREE.TorusGeometry(0.7 + i * 0.25, 0.005, 16, 100);
+        const ringMat = new THREE.MeshBasicMaterial({
+            color: 0x38bdf8,
+            transparent: true,
+            opacity: 0.2 - i * 0.05
+        });
+        const ring = new THREE.Mesh(ringGeo, ringMat);
+        ring.rotation.x = Math.PI / 2 + i * 0.3;
+        ring.rotation.y = i * 0.5;
+        scene.add(ring);
+        ring.userData = { speed: 0.002 + i * 0.001, axis: i };
+    }
+
+    // Ambient light
+    scene.add(new THREE.AmbientLight(0x38bdf8, 0.3));
+
+    const clock = new THREE.Clock();
+
+    function animate() {
+        requestAnimationFrame(animate);
+        const t = clock.getElapsedTime();
+
+        // Animate particles
+        const pos = particleGeo.attributes.position.array;
+        for (let i = 0; i < particleCount; i++) {
+            pos[i * 3] += velocities[i].x;
+            pos[i * 3 + 1] += velocities[i].y;
+            pos[i * 3 + 2] += velocities[i].z;
+            // Wrap around
+            if (Math.abs(pos[i * 3]) > 10) pos[i * 3] *= -0.9;
+            if (Math.abs(pos[i * 3 + 1]) > 10) pos[i * 3 + 1] *= -0.9;
+            if (Math.abs(pos[i * 3 + 2]) > 10) pos[i * 3 + 2] *= -0.9;
+        }
+        particleGeo.attributes.position.needsUpdate = true;
+
+        // Animate orb
+        orb.scale.setScalar(1 + Math.sin(t * 0.8) * 0.1);
+        orbMat.opacity = 0.1 + Math.sin(t * 1.2) * 0.05;
+
+        // Animate rings
+        scene.children.forEach(child => {
+            if (child.geometry && child.geometry.type === 'TorusGeometry') {
+                child.rotation.z += child.userData.speed || 0.002;
+                child.rotation.x += (child.userData.speed || 0.002) * 0.5;
+            }
+        });
+
+        particles.rotation.y += 0.0003;
+
+        renderer.render(scene, camera);
+    }
+    animate();
+
+    window.addEventListener('resize', () => {
+        const w = container.clientWidth, h = container.clientHeight;
+        camera.aspect = w / h;
+        camera.updateProjectionMatrix();
+        renderer.setSize(w, h);
+    });
+}
+
+// ── MAIN 3D VIEWER — REALISTIC CONTAINERIZED PILOT PLANT ──
+function initMainViewer() {
+    const container = document.getElementById('mainViewer');
+    if (!container) return;
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x0a0c14);
+    scene.fog = new THREE.FogExp2(0x0a0c14, 0.04);
+
+    const camera = new THREE.PerspectiveCamera(35, container.clientWidth / container.clientHeight, 0.1, 200);
+    camera.position.set(7, 4.5, 8);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(container.clientWidth, container.clientHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.0;
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    container.innerHTML = '';
+    container.appendChild(renderer.domElement);
+
+    // Re-add badge
+    const badge = document.createElement('div');
+    badge.className = 'viewer-badge';
+    badge.innerHTML = '<i class="fas fa-cube"></i>  Interactive 3D — Drag to rotate';
+    container.appendChild(badge);
+
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.target.set(0, 1.2, 0);
+    controls.autoRotate = true;
+    controls.autoRotateSpeed = 0.5;
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.08;
+    controls.maxPolarAngle = Math.PI / 2.05;
+    controls.minDistance = 4;
+    controls.maxDistance = 16;
+
+    // ── REALISTIC LIGHTING ──
+    scene.add(new THREE.AmbientLight(0x6080a0, 0.5));
+
+    const sunLight = new THREE.DirectionalLight(0xfff5e6, 2.0);
+    sunLight.position.set(8, 12, 6);
+    sunLight.castShadow = true;
+    sunLight.shadow.mapSize.set(2048, 2048);
+    sunLight.shadow.camera.near = 0.5;
+    sunLight.shadow.camera.far = 30;
+    sunLight.shadow.camera.left = -8;
+    sunLight.shadow.camera.right = 8;
+    sunLight.shadow.camera.top = 8;
+    sunLight.shadow.camera.bottom = -8;
+    sunLight.shadow.bias = -0.001;
+    scene.add(sunLight);
+
+    const rimLight = new THREE.DirectionalLight(0x38bdf8, 0.4);
+    rimLight.position.set(-5, 3, -4);
+    scene.add(rimLight);
+
+    const underGlow = new THREE.PointLight(0x38bdf8, 0.6, 8);
+    underGlow.position.set(0, 0.3, 0);
+    scene.add(underGlow);
+
+    // ── GROUND — Concrete pad ──
+    const concreteGeo = new THREE.PlaneGeometry(40, 40);
+    const concreteMat = new THREE.MeshStandardMaterial({ color: 0x2a2d35, roughness: 0.95, metalness: 0.05 });
+    const concrete = new THREE.Mesh(concreteGeo, concreteMat);
+    concrete.rotation.x = -Math.PI / 2;
+    concrete.receiveShadow = true;
+    scene.add(concrete);
+
+    // Concrete pad markings (yellow safety lines)
+    const yellowMat = new THREE.MeshStandardMaterial({ color: 0xeab308, roughness: 0.8 });
+    for (let side of [-1, 1]) {
+        const line = new THREE.Mesh(new THREE.BoxGeometry(6, 0.005, 0.08), yellowMat);
+        line.position.set(0, 0.002, side * 1.6);
+        scene.add(line);
+    }
+
+    // ── MATERIALS — Weathered industrial look ──
+    const steelFrame = new THREE.MeshStandardMaterial({ color: 0x5c6370, metalness: 0.85, roughness: 0.35 });
+    const heavySteel = new THREE.MeshStandardMaterial({ color: 0x3d4450, metalness: 0.8, roughness: 0.4 });
+    const paintedBlue = new THREE.MeshStandardMaterial({ color: 0x1d4ed8, metalness: 0.15, roughness: 0.6 });
+    const paintedGreen = new THREE.MeshStandardMaterial({ color: 0x15803d, metalness: 0.15, roughness: 0.6 });
+    const paintedWhite = new THREE.MeshStandardMaterial({ color: 0xd1d5db, metalness: 0.1, roughness: 0.7 });
+    const copperBus = new THREE.MeshStandardMaterial({ color: 0xc87533, metalness: 0.95, roughness: 0.15 });
+    const stainlessPipe = new THREE.MeshStandardMaterial({ color: 0x8a9199, metalness: 0.75, roughness: 0.25 });
+    const darkPipe = new THREE.MeshStandardMaterial({ color: 0x4b5563, metalness: 0.6, roughness: 0.35 });
+    const rubberBlack = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, metalness: 0.0, roughness: 0.9 });
+    const panelGrey = new THREE.MeshStandardMaterial({ color: 0x374151, metalness: 0.4, roughness: 0.5 });
+    const safetyYellow = new THREE.MeshStandardMaterial({ color: 0xeab308, metalness: 0.1, roughness: 0.7 });
+    const safetyRed = new THREE.MeshStandardMaterial({ color: 0xdc2626, metalness: 0.1, roughness: 0.6 });
+    const glowBlue = new THREE.MeshStandardMaterial({ color: 0x38bdf8, emissive: 0x38bdf8, emissiveIntensity: 0.4, metalness: 0.3, roughness: 0.4 });
+    const containerPaint = new THREE.MeshStandardMaterial({ color: 0x1e3a5f, metalness: 0.2, roughness: 0.65 });
+
+    const skid = new THREE.Group();
+
+    // ═══════════════════════════════════════
+    // SHIPPING CONTAINER FRAME (20ft ISO)
+    // ═══════════════════════════════════════
+    const CL = 6.0, CW = 2.4, CH = 2.6; // 20ft container proportions
+
+    // ── Container floor (thick steel) ──
+    const floor = new THREE.Mesh(new THREE.BoxGeometry(CL, 0.15, CW), heavySteel);
+    floor.position.y = 0.075;
+    floor.castShadow = true; floor.receiveShadow = true;
+    skid.add(floor);
+
+    // ── Container corner castings (ISO standard) ──
+    const castingGeo = new THREE.BoxGeometry(0.18, 0.18, 0.18);
+    const castingMat = new THREE.MeshStandardMaterial({ color: 0x2d3748, metalness: 0.9, roughness: 0.3 });
+    const castingPositions = [
+        [-CL/2+0.09, 0.15+0.09, -CW/2+0.09], [CL/2-0.09, 0.15+0.09, -CW/2+0.09],
+        [-CL/2+0.09, 0.15+0.09, CW/2-0.09], [CL/2-0.09, 0.15+0.09, CW/2-0.09],
+        [-CL/2+0.09, CH+0.06, -CW/2+0.09], [CL/2-0.09, CH+0.06, -CW/2+0.09],
+        [-CL/2+0.09, CH+0.06, CW/2-0.09], [CL/2-0.09, CH+0.06, CW/2-0.09],
+    ];
+    castingPositions.forEach(([x,y,z]) => {
+        const c = new THREE.Mesh(castingGeo, castingMat);
+        c.position.set(x,y,z); c.castShadow = true;
+        skid.add(c);
+    });
+
+    // ── Corner posts (vertical structural columns) ──
+    const postH = CH - 0.15;
+    [[-CL/2+0.05, -CW/2+0.05], [CL/2-0.05, -CW/2+0.05], [-CL/2+0.05, CW/2-0.05], [CL/2-0.05, CW/2-0.05]].forEach(([x,z]) => {
+        const post = new THREE.Mesh(new THREE.BoxGeometry(0.1, postH, 0.1), steelFrame);
+        post.position.set(x, 0.15 + postH/2, z);
+        post.castShadow = true;
+        skid.add(post);
+    });
+
+    // ── Top frame rails ──
+    const topY = CH;
+    // Long rails
+    for (let z of [-CW/2+0.05, CW/2-0.05]) {
+        const rail = new THREE.Mesh(new THREE.BoxGeometry(CL-0.1, 0.08, 0.08), steelFrame);
+        rail.position.set(0, topY, z);
+        skid.add(rail);
+    }
+    // Short rails
+    for (let x of [-CL/2+0.05, CL/2-0.05]) {
+        const rail = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.08, CW-0.1), steelFrame);
+        rail.position.set(x, topY, 0);
+        skid.add(rail);
+    }
+
+    // ── Container corrugated walls (back and sides — partial, open front) ──
+    // Back wall
+    const backWall = new THREE.Mesh(new THREE.BoxGeometry(0.04, postH, CW-0.2), containerPaint);
+    backWall.position.set(-CL/2+0.02, 0.15+postH/2, 0);
+    backWall.castShadow = true;
+    skid.add(backWall);
+    // Corrugation ridges on back wall
+    for (let j = 0; j < 12; j++) {
+        const ridge = new THREE.Mesh(new THREE.BoxGeometry(0.015, postH-0.2, 0.03), containerPaint);
+        ridge.position.set(-CL/2+0.05, 0.15+postH/2, -CW/2+0.3+j*0.16);
+        skid.add(ridge);
+    }
+
+    // Side walls (partial — lower half for containment, upper open for ventilation)
+    for (let zSide of [-1, 1]) {
+        const wallH = postH * 0.45;
+        const sideWall = new THREE.Mesh(new THREE.BoxGeometry(CL-0.2, wallH, 0.03), containerPaint);
+        sideWall.position.set(0, 0.15+wallH/2, zSide*(CW/2-0.015));
+        sideWall.castShadow = true;
+        skid.add(sideWall);
+        // Corrugation
+        for (let j = 0; j < 28; j++) {
+            const ridge = new THREE.Mesh(new THREE.BoxGeometry(0.03, wallH-0.1, 0.012), containerPaint);
+            ridge.position.set(-CL/2+0.3+j*0.2, 0.15+wallH/2, zSide*(CW/2-0.035));
+            skid.add(ridge);
+        }
+        // Safety mesh upper section
+        const meshH = postH * 0.5;
+        const meshWall = new THREE.Mesh(
+            new THREE.BoxGeometry(CL-0.2, meshH, 0.01),
+            new THREE.MeshStandardMaterial({ color: 0x4a5568, metalness: 0.6, roughness: 0.4, wireframe: true, transparent: true, opacity: 0.4 })
+        );
+        meshWall.position.set(0, 0.15+wallH+meshH/2, zSide*(CW/2-0.02));
+        skid.add(meshWall);
+    }
+
+    // ── Floor cross-members (I-beam pattern) ──
+    for (let i = -2; i <= 2; i++) {
+        const xBeam = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.12, CW-0.2), heavySteel);
+        xBeam.position.set(i * 1.2, 0.075, 0);
+        skid.add(xBeam);
+    }
+
+    // ── Diamond plate walkway surface ──
+    const walkSurface = new THREE.Mesh(
+        new THREE.BoxGeometry(CL-0.3, 0.02, CW-0.3),
+        new THREE.MeshStandardMaterial({ color: 0x4b5563, metalness: 0.7, roughness: 0.5 })
+    );
+    walkSurface.position.y = 0.16;
+    walkSurface.receiveShadow = true;
+    skid.add(walkSurface);
+
+    // ═══════════════════════════════════════
+    // PROCESS EQUIPMENT
+    // ═══════════════════════════════════════
+
+    // ── FEED/LEACH TANK — Large, industrial ──
+    const feedR = 0.45, feedH = 1.6;
+    const feedTank = new THREE.Mesh(new THREE.CylinderGeometry(feedR, feedR, feedH, 48), paintedBlue);
+    feedTank.position.set(-2.0, 0.16+feedH/2, -0.4);
+    feedTank.castShadow = true;
+    skid.add(feedTank);
+    // Dished head top
+    const feedTop = new THREE.Mesh(new THREE.SphereGeometry(feedR, 48, 24, 0, Math.PI*2, 0, Math.PI/3), paintedBlue);
+    feedTop.position.set(-2.0, 0.16+feedH+0.05, -0.4);
+    skid.add(feedTop);
+    // Tank bands (3 reinforcement rings)
+    for (let bh of [0.4, 0.8, 1.2]) {
+        const band = new THREE.Mesh(new THREE.TorusGeometry(feedR+0.01, 0.015, 8, 48), steelFrame);
+        band.rotation.x = Math.PI/2;
+        band.position.set(-2.0, 0.16+bh, -0.4);
+        skid.add(band);
+    }
+    // Tank nozzles (flanged connections)
+    for (let nz of [0.3, 0.8, 1.3]) {
+        const nozzle = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.12, 16), stainlessPipe);
+        nozzle.rotation.z = Math.PI/2;
+        nozzle.position.set(-2.0+feedR+0.06, 0.16+nz, -0.4);
+        skid.add(nozzle);
+        const flange = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.02, 16), steelFrame);
+        flange.rotation.z = Math.PI/2;
+        flange.position.set(-2.0+feedR+0.12, 0.16+nz, -0.4);
+        skid.add(flange);
+    }
+    // Level sight glass
+    const sightGlass = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 1.0, 8),
+        new THREE.MeshStandardMaterial({ color: 0x60a5fa, transparent: true, opacity: 0.5, metalness: 0.3 }));
+    sightGlass.position.set(-2.0-feedR-0.05, 0.16+0.7, -0.4);
+    skid.add(sightGlass);
+
+    // ── NEUTRALIZATION / CONDITIONING TANK ──
+    const neutR = 0.38, neutH = 1.4;
+    const neutTank = new THREE.Mesh(new THREE.CylinderGeometry(neutR, neutR, neutH, 48), paintedGreen);
+    neutTank.position.set(-2.0, 0.16+neutH/2, 0.5);
+    neutTank.castShadow = true;
+    skid.add(neutTank);
+    const neutTop = new THREE.Mesh(new THREE.SphereGeometry(neutR, 48, 24, 0, Math.PI*2, 0, Math.PI/3), paintedGreen);
+    neutTop.position.set(-2.0, 0.16+neutH+0.03, 0.5);
+    skid.add(neutTop);
+    for (let bh of [0.35, 0.7, 1.05]) {
+        const band = new THREE.Mesh(new THREE.TorusGeometry(neutR+0.01, 0.012, 8, 48), steelFrame);
+        band.rotation.x = Math.PI/2;
+        band.position.set(-2.0, 0.16+bh, 0.5);
+        skid.add(band);
+    }
+    // Agitator motor housing
+    const agMotor = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.18, 24), heavySteel);
+    agMotor.position.set(-2.0, 0.16+neutH+0.35, 0.5);
+    skid.add(agMotor);
+    const agCoupling = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.12, 16), steelFrame);
+    agCoupling.position.set(-2.0, 0.16+neutH+0.2, 0.5);
+    skid.add(agCoupling);
+    // Agitator shaft
+    const agitator = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.018, neutH+0.1, 12), stainlessPipe);
+    agitator.position.set(-2.0, 0.16+neutH/2+0.05, 0.5);
+    skid.add(agitator);
+    // Impeller blades
+    for (let b = 0; b < 4; b++) {
+        const blade = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.04, 0.015), stainlessPipe);
+        blade.position.set(-2.0, 0.16+0.4, 0.5);
+        blade.rotation.y = b * Math.PI/2;
+        blade.userData.isImpeller = true;
+        skid.add(blade);
+    }
+
+    // ── EC CELL STACK — The Heart (12 cells, realistic) ──
+    const cellStack = new THREE.Group();
+    const numCells = 12;
+    const cellSpacing = 0.055;
+    const stackWidth = numCells * cellSpacing;
+
+    // End plates (thick steel)
+    for (let end of [-1, 1]) {
+        const endPlate = new THREE.Mesh(new THREE.BoxGeometry(0.8, 1.0, 0.06), heavySteel);
+        endPlate.position.z = end * (stackWidth/2 + 0.03);
+        cellStack.add(endPlate);
+    }
+    // Tie rods (4 corners)
+    for (let tx of [-0.35, 0.35]) {
+        for (let ty of [-0.4, 0.4]) {
+            const rod = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, stackWidth+0.2, 8), stainlessPipe);
+            rod.rotation.x = Math.PI/2;
+            rod.position.set(tx, ty, 0);
+            cellStack.add(rod);
+            // Nuts on ends
+            for (let ne of [-1, 1]) {
+                const nut = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.015, 6), steelFrame);
+                nut.rotation.x = Math.PI/2;
+                nut.position.set(tx, ty, ne*(stackWidth/2+0.1));
+                cellStack.add(nut);
+            }
+        }
+    }
+    // Cell plates and membranes
+    for (let i = 0; i < numCells; i++) {
+        // Electrode plate
+        const plate = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.9, 0.02),
+            i % 2 === 0 ? new THREE.MeshStandardMaterial({ color: 0x4a5568, metalness: 0.85, roughness: 0.25 })
+                        : new THREE.MeshStandardMaterial({ color: 0x6b7280, metalness: 0.8, roughness: 0.3 }));
+        plate.position.z = -stackWidth/2 + i * cellSpacing + 0.01;
+        cellStack.add(plate);
+        // Membrane (the secret sauce — subtle glow)
+        if (i < numCells - 1) {
+            const membrane = new THREE.Mesh(
+                new THREE.BoxGeometry(0.65, 0.85, 0.005),
+                new THREE.MeshStandardMaterial({
+                    color: 0x38bdf8, transparent: true, opacity: 0.25,
+                    emissive: 0x38bdf8, emissiveIntensity: 0.3,
+                    side: THREE.DoubleSide
+                })
+            );
+            membrane.position.z = -stackWidth/2 + i * cellSpacing + cellSpacing/2;
+            membrane.userData.isMembrane = true;
+            cellStack.add(membrane);
+        }
+    }
+    // Copper bus bars (heavy gauge)
+    for (let bx of [-0.42, 0.42]) {
+        const bus = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.06, stackWidth+0.15), copperBus);
+        bus.position.set(bx, 0.35, 0);
+        cellStack.add(bus);
+        // Terminal lugs
+        for (let ne of [-1, 1]) {
+            const lug = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.08, 0.02), copperBus);
+            lug.position.set(bx, 0.35, ne*(stackWidth/2+0.08));
+            cellStack.add(lug);
+        }
+    }
+    // Manifold headers (inlet/outlet)
+    for (let my of [-0.38, 0.38]) {
+        const manifold = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, stackWidth+0.1, 16), stainlessPipe);
+        manifold.rotation.x = Math.PI/2;
+        manifold.position.set(0, my, 0);
+        cellStack.add(manifold);
+    }
+
+    cellStack.position.set(0.3, 0.16+0.65, 0);
+    cellStack.castShadow = true;
+    skid.add(cellStack);
+
+    // ── RECTIFIER / POWER SUPPLY UNIT ──
+    const psuW = 0.7, psuH = 1.2, psuD = 0.5;
+    const psu = new THREE.Mesh(new THREE.BoxGeometry(psuW, psuH, psuD), panelGrey);
+    psu.position.set(2.0, 0.16+psuH/2, -0.5);
+    psu.castShadow = true;
+    skid.add(psu);
+    // Ventilation louvers
+    for (let lv = 0; lv < 6; lv++) {
+        const louver = new THREE.Mesh(new THREE.BoxGeometry(psuW-0.1, 0.008, 0.03), steelFrame);
+        louver.position.set(2.0, 0.16+0.3+lv*0.1, -0.5-psuD/2-0.015);
+        louver.rotation.x = 0.3;
+        skid.add(louver);
+    }
+    // Digital display
+    const display = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.15, 0.01),
+        new THREE.MeshStandardMaterial({ color: 0x22d3ee, emissive: 0x22d3ee, emissiveIntensity: 0.7 }));
+    display.position.set(2.0, 0.16+psuH-0.2, -0.5+psuD/2+0.005);
+    skid.add(display);
+    // Status LEDs
+    const ledData = [{c:0x22c55e, label:'RUN'}, {c:0xf59e0b, label:'WARN'}, {c:0xef4444, label:'FAULT'}];
+    ledData.forEach((ld, i) => {
+        const led = new THREE.Mesh(new THREE.SphereGeometry(0.015, 12, 12),
+            new THREE.MeshStandardMaterial({ color: ld.c, emissive: ld.c, emissiveIntensity: 1.0 }));
+        led.position.set(1.8+i*0.1, 0.16+psuH-0.05, -0.5+psuD/2+0.005);
+        led.userData.isLed = true;
+        led.userData.baseColor = ld.c;
+        skid.add(led);
+    });
+    // DC output terminals
+    for (let ti = 0; ti < 2; ti++) {
+        const terminal = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 0.06, 12),
+            ti === 0 ? safetyRed : new THREE.MeshStandardMaterial({ color: 0x1e40af }));
+        terminal.position.set(2.0-0.12+ti*0.24, 0.16+psuH+0.03, -0.5);
+        skid.add(terminal);
+    }
+
+    // ── HMI / PLC CONTROL CABINET ──
+    const hmiW = 0.5, hmiH = 1.4, hmiD = 0.35;
+    const hmiCab = new THREE.Mesh(new THREE.BoxGeometry(hmiW, hmiH, hmiD), paintedWhite);
+    hmiCab.position.set(2.2, 0.16+hmiH/2, 0.6);
+    hmiCab.castShadow = true;
+    skid.add(hmiCab);
+    // Door handle
+    const handle = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.12, 0.02), steelFrame);
+    handle.position.set(2.2+hmiW/2-0.06, 0.16+hmiH/2, 0.6+hmiD/2+0.01);
+    skid.add(handle);
+    // HMI touchscreen
+    const hmiScreen = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.2, 0.015),
+        new THREE.MeshStandardMaterial({ color: 0x0ea5e9, emissive: 0x0ea5e9, emissiveIntensity: 0.5 }));
+    hmiScreen.position.set(2.2, 0.16+hmiH-0.25, 0.6+hmiD/2+0.008);
+    skid.add(hmiScreen);
+    // E-stop button
+    const eStop = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 0.02, 16), safetyRed);
+    eStop.rotation.x = Math.PI/2;
+    eStop.position.set(2.2, 0.16+hmiH/2-0.3, 0.6+hmiD/2+0.01);
+    skid.add(eStop);
+    const eStopRing = new THREE.Mesh(new THREE.TorusGeometry(0.03, 0.005, 8, 16), safetyYellow);
+    eStopRing.rotation.x = Math.PI/2;
+    eStopRing.position.set(2.2, 0.16+hmiH/2-0.3, 0.6+hmiD/2+0.015);
+    skid.add(eStopRing);
+
+    // ── CENTRIFUGAL PUMPS (2x — realistic) ──
+    function buildPump(px, pz, label) {
+        const pumpGroup = new THREE.Group();
+        // Volute casing
+        const volute = new THREE.Mesh(new THREE.SphereGeometry(0.12, 24, 24), paintedBlue);
+        volute.scale.set(1, 0.7, 1);
+        pumpGroup.add(volute);
+        // Suction nozzle
+        const suction = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 0.15, 16), stainlessPipe);
+        suction.rotation.z = Math.PI/2;
+        suction.position.set(-0.18, 0, 0);
+        pumpGroup.add(suction);
+        // Discharge nozzle (top)
+        const discharge = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.12, 16), stainlessPipe);
+        discharge.position.set(0, 0.12, 0);
+        pumpGroup.add(discharge);
+        // Motor
+        const motor = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.25, 24), heavySteel);
+        motor.rotation.z = Math.PI/2;
+        motor.position.set(0.2, 0, 0);
+        pumpGroup.add(motor);
+        // Motor fins
+        for (let f = 0; f < 8; f++) {
+            const fin = new THREE.Mesh(new THREE.BoxGeometry(0.005, 0.16, 0.22), heavySteel);
+            fin.position.set(0.12+f*0.02, 0, 0);
+            pumpGroup.add(fin);
+        }
+        // Coupling guard (safety yellow)
+        const guard = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.06, 16), safetyYellow);
+        guard.rotation.z = Math.PI/2;
+        guard.position.set(0.06, 0, 0);
+        pumpGroup.add(guard);
+        // Baseplate
+        const base = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.03, 0.2), heavySteel);
+        base.position.y = -0.1;
+        pumpGroup.add(base);
+
+        pumpGroup.position.set(px, 0.16+0.22, pz);
+        pumpGroup.castShadow = true;
+        skid.add(pumpGroup);
+    }
+    buildPump(0.9, -0.6, 'P-101');
+    buildPump(0.9, 0.5, 'P-102');
+
+    // ── PIPING NETWORK — Realistic with elbows and flanges ──
+    function addPipe(x1,y1,z1, x2,y2,z2, mat, radius) {
+        const r = radius || 0.03;
+        const dir = new THREE.Vector3(x2-x1,y2-y1,z2-z1);
+        const len = dir.length();
+        if (len < 0.01) return;
+        const pipe = new THREE.Mesh(new THREE.CylinderGeometry(r, r, len, 12), mat || stainlessPipe);
+        pipe.position.set((x1+x2)/2,(y1+y2)/2,(z1+z2)/2);
+        dir.normalize();
+        const quat = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0,1,0), dir);
+        pipe.quaternion.copy(quat);
+        pipe.castShadow = true;
+        skid.add(pipe);
+    }
+    function addElbow(x,y,z, mat) {
+        const elbow = new THREE.Mesh(new THREE.SphereGeometry(0.04, 12, 12), mat || stainlessPipe);
+        elbow.position.set(x,y,z);
+        skid.add(elbow);
+    }
+    function addFlange(x,y,z, rotAxis, mat) {
+        const flange = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.02, 16), mat || steelFrame);
+        if (rotAxis === 'x') flange.rotation.x = Math.PI/2;
+        else if (rotAxis === 'z') flange.rotation.z = Math.PI/2;
+        flange.position.set(x,y,z);
+        skid.add(flange);
+    }
+
+    // Feed tank outlet → Pump 1 suction
+    const pipeY1 = 0.5;
+    addPipe(-2.0+feedR+0.12, pipeY1, -0.4, -0.5, pipeY1, -0.4);
+    addElbow(-0.5, pipeY1, -0.4);
+    addPipe(-0.5, pipeY1, -0.4, -0.5, pipeY1, -0.6);
+    addPipe(-0.5, pipeY1, -0.6, 0.7, pipeY1, -0.6);
+    addFlange(0.7, pipeY1, -0.6, 'z');
+
+    // Pump 1 discharge → EC cell inlet
+    addPipe(0.9, 0.55, -0.6, 0.9, 0.9, -0.6);
+    addElbow(0.9, 0.9, -0.6);
+    addPipe(0.9, 0.9, -0.6, 0.9, 0.9, -0.33);
+    addElbow(0.9, 0.9, -0.33);
+    addPipe(0.9, 0.9, -0.33, 0.3, 0.9, -0.33, glowBlue);
+    addFlange(0.3, 0.9, -0.33, 'z', glowBlue);
+
+    // EC cell outlet → Neut tank
+    addPipe(0.3, 0.5, 0.33, -0.5, 0.5, 0.33);
+    addElbow(-0.5, 0.5, 0.33);
+    addPipe(-0.5, 0.5, 0.33, -0.5, 0.5, 0.5);
+    addPipe(-0.5, 0.5, 0.5, -2.0+neutR+0.12, 0.5, 0.5);
+    addFlange(-2.0+neutR+0.12, 0.5, 0.5, 'z');
+
+    // Neut tank → Pump 2 → recirculation
+    addPipe(-2.0+neutR+0.12, 0.85, 0.5, -0.3, 0.85, 0.5);
+    addElbow(-0.3, 0.85, 0.5);
+    addPipe(-0.3, 0.85, 0.5, 0.7, 0.85, 0.5);
+    addFlange(0.7, 0.85, 0.5, 'z');
+
+    // PSU DC cables to EC cell (heavy copper)
+    addPipe(2.0, 0.16+psuH+0.03, -0.5, 2.0, 1.8, -0.5, copperBus, 0.02);
+    addElbow(2.0, 1.8, -0.5, copperBus);
+    addPipe(2.0, 1.8, -0.5, 0.72, 1.8, -0.5, copperBus, 0.02);
+    addElbow(0.72, 1.8, -0.5, copperBus);
+    addPipe(0.72, 1.8, -0.5, 0.72, 1.0, 0, copperBus, 0.02);
+
+    // Return / drain line
+    addPipe(-2.0, 0.3, -0.4, -2.0, 0.3, 0.5, darkPipe, 0.025);
+
+    // ── VALVES — Gate valves with handwheels ──
+    function addGateValve(x,y,z) {
+        // Valve body
+        const body = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.08, 0.06), heavySteel);
+        body.position.set(x,y,z);
+        skid.add(body);
+        // Bonnet
+        const bonnet = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.025, 0.1, 12), steelFrame);
+        bonnet.position.set(x, y+0.09, z);
+        skid.add(bonnet);
+        // Handwheel
+        const wheel = new THREE.Mesh(new THREE.TorusGeometry(0.035, 0.005, 8, 24), safetyRed);
+        wheel.position.set(x, y+0.15, z);
+        skid.add(wheel);
+        // Handwheel spokes
+        for (let s = 0; s < 4; s++) {
+            const spoke = new THREE.Mesh(new THREE.CylinderGeometry(0.003, 0.003, 0.065, 6), safetyRed);
+            spoke.rotation.z = Math.PI/2;
+            spoke.rotation.y = s * Math.PI/4;
+            spoke.position.set(x, y+0.15, z);
+            skid.add(spoke);
+        }
+        // Flanges on either side of valve body
+        for (let side of [-1, 1]) {
+            const vFlange = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.045, 0.015, 16), steelFrame);
+            vFlange.rotation.z = Math.PI/2;
+            vFlange.position.set(x + side*0.04, y, z);
+            skid.add(vFlange);
+        }
+    }
+    addGateValve(-0.5, pipeY1, -0.5);
+    addGateValve(0.2, 0.9, -0.33);
+    addGateValve(-0.9, 0.5, 0.42);
+    addGateValve(-0.3, 0.85, 0.5);
+
+    // ── PRESSURE GAUGES ──
+    function addPressureGauge(x, y, z) {
+        // Gauge face
+        const face = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 0.015, 24), paintedWhite);
+        face.rotation.x = Math.PI/2;
+        face.position.set(x, y, z);
+        skid.add(face);
+        // Gauge rim
+        const rim = new THREE.Mesh(new THREE.TorusGeometry(0.035, 0.004, 8, 24), steelFrame);
+        rim.rotation.x = Math.PI/2;
+        rim.position.set(x, y, z+0.008);
+        skid.add(rim);
+        // Needle
+        const needle = new THREE.Mesh(new THREE.BoxGeometry(0.002, 0.025, 0.002), safetyRed);
+        needle.position.set(x, y+0.005, z+0.01);
+        needle.rotation.z = -0.4 + Math.random() * 0.8;
+        skid.add(needle);
+        // Stem
+        const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.008, 0.06, 8), stainlessPipe);
+        stem.position.set(x, y-0.05, z);
+        skid.add(stem);
+    }
+    addPressureGauge(-0.5, 0.65, -0.4);
+    addPressureGauge(0.9, 1.05, -0.6);
+    addPressureGauge(-0.9, 0.65, 0.5);
+    addPressureGauge(0.3, 1.15, 0.33);
+
+    // ── FLOW INDICATORS (inline sight glasses) ──
+    function addFlowIndicator(x, y, z) {
+        const body = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 0.1, 16),
+            new THREE.MeshStandardMaterial({ color: 0x93c5fd, transparent: true, opacity: 0.4, metalness: 0.2 }));
+        body.rotation.z = Math.PI/2;
+        body.position.set(x, y, z);
+        skid.add(body);
+        // End caps
+        for (let ec of [-1, 1]) {
+            const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.01, 16), steelFrame);
+            cap.rotation.z = Math.PI/2;
+            cap.position.set(x + ec*0.055, y, z);
+            skid.add(cap);
+        }
+    }
+    addFlowIndicator(0.0, pipeY1, -0.6);
+    addFlowIndicator(-1.0, 0.5, 0.5);
+
+    // ── CABLE TRAY & CONDUIT RUNS ──
+    const trayY = CH - 0.15;
+    // Main cable tray (perforated)
+    const tray = new THREE.Mesh(new THREE.BoxGeometry(CL-0.6, 0.03, 0.2),
+        new THREE.MeshStandardMaterial({ color: 0x4b5563, metalness: 0.6, roughness: 0.4 }));
+    tray.position.set(0, trayY, -CW/2+0.25);
+    skid.add(tray);
+    // Tray side rails
+    for (let ts of [-0.1, 0.1]) {
+        const tRail = new THREE.Mesh(new THREE.BoxGeometry(CL-0.6, 0.06, 0.015), steelFrame);
+        tRail.position.set(0, trayY+0.03, -CW/2+0.25+ts);
+        skid.add(tRail);
+    }
+    // Cables in tray (color-coded)
+    const cableColors = [0xdc2626, 0x2563eb, 0x16a34a, 0xeab308, 0x7c3aed, 0x000000];
+    cableColors.forEach((cc, i) => {
+        const cable = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.008, CL-0.8, 8),
+            new THREE.MeshStandardMaterial({ color: cc, roughness: 0.8 }));
+        cable.rotation.z = Math.PI/2;
+        cable.position.set(0, trayY+0.04, -CW/2+0.2+i*0.025);
+        skid.add(cable);
+    });
+    // Conduit drops from tray to equipment
+    const conduitMat = new THREE.MeshStandardMaterial({ color: 0x6b7280, metalness: 0.5, roughness: 0.4 });
+    // Drop to PSU
+    addPipe(1.8, trayY, -CW/2+0.25, 1.8, 0.16+psuH, -0.5, conduitMat, 0.015);
+    // Drop to HMI
+    addPipe(2.0, trayY, -CW/2+0.25, 2.0, 0.16+hmiH, 0.6, conduitMat, 0.015);
+    // Drop to EC cell
+    addPipe(0.3, trayY, -CW/2+0.25, 0.3, 1.6, 0, conduitMat, 0.015);
+
+    // ── DRAIN SUMP & CONTAINMENT ──
+    // Drip tray under EC cell
+    const dripTray = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.04, 1.0),
+        new THREE.MeshStandardMaterial({ color: 0x374151, metalness: 0.5, roughness: 0.5 }));
+    dripTray.position.set(0.3, 0.17, 0);
+    skid.add(dripTray);
+    // Drip tray lips
+    for (let dx of [-0.6, 0.6]) {
+        const lip = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.06, 1.0), heavySteel);
+        lip.position.set(0.3+dx, 0.2, 0);
+        skid.add(lip);
+    }
+    for (let dz of [-0.5, 0.5]) {
+        const lip = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.06, 0.02), heavySteel);
+        lip.position.set(0.3, 0.2, dz);
+        skid.add(lip);
+    }
+    // Sump drain pipe
+    addPipe(0.3, 0.17, 0.5, 0.3, 0.17, CW/2+0.3, darkPipe, 0.02);
+
+    // ── NAMEPLATE ──
+    const namePlate = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.2, 0.005),
+        new THREE.MeshStandardMaterial({ color: 0xc0c0c0, metalness: 0.9, roughness: 0.2 }));
+    namePlate.position.set(CL/2-0.25, 1.2, CW/2-0.01);
+    skid.add(namePlate);
+    // Nameplate border
+    const npBorder = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.22, 0.003),
+        new THREE.MeshStandardMaterial({ color: 0x1e3a5f, metalness: 0.8, roughness: 0.3 }));
+    npBorder.position.set(CL/2-0.25, 1.2, CW/2-0.012);
+    skid.add(npBorder);
+
+    // ── SAFETY SIGNAGE ──
+    // Hazard diamond (on back wall)
+    const hazSign = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.25, 0.005), safetyYellow);
+    hazSign.position.set(-CL/2+0.06, 1.5, 0);
+    hazSign.rotation.z = Math.PI/4;
+    skid.add(hazSign);
+    // "HIGH VOLTAGE" sign near PSU
+    const hvSign = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.12, 0.005), safetyRed);
+    hvSign.position.set(2.0, 0.16+psuH+0.15, -0.5+psuD/2+0.005);
+    skid.add(hvSign);
+    // Lightning bolt on HV sign
+    const bolt = new THREE.Mesh(new THREE.ConeGeometry(0.015, 0.06, 3), safetyYellow);
+    bolt.position.set(2.0, 0.16+psuH+0.15, -0.5+psuD/2+0.01);
+    skid.add(bolt);
+
+    // ── FORKLIFT POCKETS ──
+    for (let fz of [-0.6, 0.6]) {
+        const pocket = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.1, 0.5), heavySteel);
+        pocket.position.set(-CL/2+0.1, 0.05, fz);
+        skid.add(pocket);
+        const pocket2 = pocket.clone();
+        pocket2.position.x = CL/2-0.1;
+        skid.add(pocket2);
+    }
+
+    // ── GROUNDING LUG ──
+    const groundLug = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 0.03, 12),
+        new THREE.MeshStandardMaterial({ color: 0x22c55e, metalness: 0.8 }));
+    groundLug.position.set(CL/2-0.15, 0.3, CW/2-0.05);
+    skid.add(groundLug);
+    // Ground cable
+    addPipe(CL/2-0.15, 0.3, CW/2-0.05, CL/2-0.15, 0.02, CW/2+0.2,
+        new THREE.MeshStandardMaterial({ color: 0x22c55e, roughness: 0.7 }), 0.008);
+
+    // ── SAMPLE PORTS (small ball valves) ──
+    for (let sp of [{x:-1.0, y:pipeY1, z:-0.4}, {x:0.3, y:0.5, z:0.33}]) {
+        const spBody = new THREE.Mesh(new THREE.SphereGeometry(0.02, 12, 12), stainlessPipe);
+        spBody.position.set(sp.x, sp.y, sp.z);
+        skid.add(spBody);
+        const spHandle = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.008, 0.008),
+            new THREE.MeshStandardMaterial({ color: 0x3b82f6 }));
+        spHandle.position.set(sp.x, sp.y+0.025, sp.z);
+        skid.add(spHandle);
+    }
+
+    // ── INSTRUMENT AIR LINE (small yellow pipe along top) ──
+    addPipe(-CL/2+0.3, trayY-0.1, CW/2-0.15, CL/2-0.3, trayY-0.1, CW/2-0.15, safetyYellow, 0.012);
+
+    // ── WEATHERING / REALISM DETAILS ──
+    // Rust drip stains (subtle dark patches on container walls)
+    for (let i = 0; i < 5; i++) {
+        const rustSpot = new THREE.Mesh(new THREE.PlaneGeometry(0.08, 0.15),
+            new THREE.MeshStandardMaterial({ color: 0x8b4513, transparent: true, opacity: 0.15, side: THREE.DoubleSide }));
+        rustSpot.position.set(-CL/2+0.03, 0.8+i*0.3, -0.8+i*0.35);
+        rustSpot.rotation.y = Math.PI/2;
+        skid.add(rustSpot);
+    }
+
+    // ── ENVIRONMENT — Gravel, bollards, ambient ──
+    // Safety bollards around the unit
+    const bollardMat = new THREE.MeshStandardMaterial({ color: 0xeab308, metalness: 0.2, roughness: 0.6 });
+    const bollardPositions = [
+        [-CL/2-0.5, 0, -CW/2-0.5], [CL/2+0.5, 0, -CW/2-0.5],
+        [-CL/2-0.5, 0, CW/2+0.5], [CL/2+0.5, 0, CW/2+0.5],
+        [0, 0, -CW/2-0.5], [0, 0, CW/2+0.5]
+    ];
+    bollardPositions.forEach(([bx, by, bz]) => {
+        const bollard = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.8, 16), bollardMat);
+        bollard.position.set(bx, 0.4, bz);
+        bollard.castShadow = true;
+        scene.add(bollard);
+        // Black stripe
+        const stripe = new THREE.Mesh(new THREE.CylinderGeometry(0.062, 0.062, 0.08, 16), rubberBlack);
+        stripe.position.set(bx, 0.65, bz);
+        scene.add(stripe);
+    });
+
+    // Gravel scatter around pad
+    const gravelGeo = new THREE.BufferGeometry();
+    const gravelCount = 800;
+    const gravelPos = new Float32Array(gravelCount * 3);
+    for (let i = 0; i < gravelCount; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const dist = 3 + Math.random() * 12;
+        gravelPos[i*3] = Math.cos(angle) * dist;
+        gravelPos[i*3+1] = Math.random() * 0.02;
+        gravelPos[i*3+2] = Math.sin(angle) * dist;
+    }
+    gravelGeo.setAttribute('position', new THREE.BufferAttribute(gravelPos, 3));
+    const gravel = new THREE.Points(gravelGeo, new THREE.PointsMaterial({
+        color: 0x4a4a4a, size: 0.06
+    }));
+    scene.add(gravel);
+
+    // ── SUBTLE ENVIRONMENT LIGHTING ──
+    // Warm work light inside the container
+    const workLight = new THREE.PointLight(0xfff0d0, 0.8, 5);
+    workLight.position.set(0, CH-0.2, 0);
+    skid.add(workLight);
+
+    // Blue accent glow from EC cell
+    const cellGlow = new THREE.PointLight(0x38bdf8, 0.6, 3);
+    cellGlow.position.set(0.3, 1.0, 0);
+    skid.add(cellGlow);
+
+    // Green status glow from HMI
+    const hmiGlow = new THREE.PointLight(0x22d3ee, 0.3, 2);
+    hmiGlow.position.set(2.2, 1.2, 0.6);
+    skid.add(hmiGlow);
+
+    scene.add(skid);
+
+    // ═══════════════════════════════════════
+    // ANIMATION LOOP
+    // ═══════════════════════════════════════
+    const clock = new THREE.Clock();
+
+    // Collect animated objects
+    const membranes = [];
+    cellStack.traverse(c => { if (c.userData && c.userData.isMembrane) membranes.push(c); });
+    const leds = [];
+    skid.traverse(c => { if (c.userData && c.userData.isLed) leds.push(c); });
+    const impellers = [];
+    skid.traverse(c => { if (c.userData && c.userData.isImpeller) impellers.push(c); });
+
+    function animate() {
+        requestAnimationFrame(animate);
+        const t = clock.getElapsedTime();
+
+        // Membrane pulse — the secret sauce glowing
+        membranes.forEach((m, i) => {
+            m.material.emissiveIntensity = 0.2 + Math.sin(t * 1.5 + i * 0.4) * 0.25;
+            m.material.opacity = 0.2 + Math.sin(t * 1.5 + i * 0.4) * 0.1;
+        });
+
+        // EC cell glow pulse
+        cellGlow.intensity = 0.4 + Math.sin(t * 1.5) * 0.3;
+
+        // LED status blink
+        leds.forEach((led, i) => {
+            if (i === 0) { // RUN — steady with subtle pulse
+                led.material.emissiveIntensity = 0.8 + Math.sin(t * 2) * 0.2;
+            } else if (i === 1) { // WARN — off
+                led.material.emissiveIntensity = 0.05;
+            } else { // FAULT — off
+                led.material.emissiveIntensity = 0.02;
+            }
+        });
+
+        // HMI screen flicker (subtle — like a real display)
+        hmiScreen.material.emissiveIntensity = 0.45 + Math.sin(t * 8) * 0.05;
+
+        // PSU display
+        display.material.emissiveIntensity = 0.6 + Math.sin(t * 3) * 0.1;
+
+        // Agitator rotation
+        agitator.rotation.y = t * 1.5;
+        impellers.forEach(imp => { imp.rotation.y = t * 1.5; });
+
+        // Work light subtle flicker
+        workLight.intensity = 0.75 + Math.sin(t * 12) * 0.05;
+
+        controls.update();
+        renderer.render(scene, camera);
+    }
+    animate();
+
+    // ── RESIZE HANDLER ──
+    window.addEventListener('resize', () => {
+        const w = container.clientWidth, h = container.clientHeight;
+        camera.aspect = w / h;
+        camera.updateProjectionMatrix();
+        renderer.setSize(w, h);
+    });
+}
+
+// ── INIT ──
+initHero();
+initMainViewer();
+
+</script>
+</body>
+</html>
