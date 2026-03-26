@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CETTS — Confidential Investor Memorandum</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #FAFBFC;
+    --bg-alt: #F1F3F6;
+    --card: #FFFFFF;
+    --navy: #0F1B2D;
+    --slate: #334155;
+    --muted: #64748B;
+    --light: #94A3B8;
+    --accent: #1E40AF;
+    --accent-light: #3B82F6;
+    --border: #E2E8F0;
+    --border-dark: #CBD5E1;
+    --green: #059669;
+    --red: #DC2626;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html { scroll-behavior:smooth; }
+  body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--slate); line-height:1.7; }
+
+  /* GATE */
+  #gate { position:fixed; inset:0; z-index:1000; background:var(--navy); display:flex; align-items:center; justify-content:center; transition:opacity 0.5s, visibility 0.5s; }
+  #gate.hidden { opacity:0; visibility:hidden; pointer-events:none; }
+  .gate-box { text-align:center; max-width:420px; padding:3rem; }
+  .gate-box h1 { font-family:'Playfair Display',serif; color:#fff; font-size:2rem; margin-bottom:0.5rem; }
+  .gate-box p { color:var(--light); font-size:0.9rem; margin-bottom:2rem; }
+  .gate-box input { width:100%; padding:0.85rem 1rem; border:1px solid rgba(255,255,255,0.15); background:rgba(255,255,255,0.06); color:#fff; border-radius:6px; font-size:0.9rem; margin-bottom:0.8rem; outline:none; font-family:'Inter',sans-serif; }
+  .gate-box input::placeholder { color:var(--light); }
+  .gate-box input:focus { border-color:var(--accent-light); }
+  .gate-box button { width:100%; padding:0.85rem; background:var(--accent); color:#fff; border:none; border-radius:6px; font-size:0.9rem; font-weight:600; cursor:pointer; font-family:'Inter',sans-serif; transition:background 0.2s; }
+  .gate-box button:hover { background:var(--accent-light); }
+  .gate-box .disclaimer { color:var(--muted); font-size:0.7rem; margin-top:1.5rem; line-height:1.5; }
+
+  /* NAV */
+  nav { position:sticky; top:0; z-index:50; background:rgba(255,255,255,0.95); backdrop-filter:blur(12px); border-bottom:1px solid var(--border); padding:0.7rem 2rem; display:flex; justify-content:space-between; align-items:center; }
+  .nav-logo { font-family:'Playfair Display',serif; font-weight:700; font-size:1.15rem; color:var(--navy); letter-spacing:0.02em; }
+  .nav-logo span { color:var(--accent); }
+  .nav-right { display:flex; align-items:center; gap:1.5rem; }
+  .nav-right a { color:var(--muted); text-decoration:none; font-size:0.8rem; font-weight:500; transition:color .2s; }
+  .nav-right a:hover { color:var(--accent); }
+  .nav-tag { font-size:0.65rem; color:var(--red); font-weight:600; text-transform:uppercase; letter-spacing:0.1em; border:1px solid var(--red); padding:0.2rem 0.6rem; border-radius:3px; }
+
+  /* LAYOUT */
+  .container { max-width:860px; margin:0 auto; padding:0 2rem; }
+  section { padding:4rem 0; border-bottom:1px solid var(--border); }
+  section:last-of-type { border-bottom:none; }
+
+  /* COVER */
+  .cover { text-align:center; padding:6rem 0 5rem; border-bottom:2px solid var(--navy); }
+  .cover .overline { font-size:0.7rem; font-weight:600; letter-spacing:0.12em; text-transform:uppercase; color:var(--accent); margin-bottom:1.5rem; }
+  .cover h1 { font-family:'Playfair Display',serif; font-size:3rem; color:var(--navy); font-weight:700; letter-spacing:-0.02em; line-height:1.15; margin-bottom:0.8rem; }
+  .cover .subtitle { font-size:1.05rem; color:var(--muted); max-width:550px; margin:0 auto 2.5rem; }
+  .cover-meta { display:flex; justify-content:center; gap:3rem; font-size:0.78rem; color:var(--light); }
+  .cover-meta div { text-align:center; }
+  .cover-meta .val { font-size:0.9rem; font-weight:600; color:var(--navy); display:block; margin-bottom:0.15rem; }
+
+  /* SECTION HEADERS */
+  .s-num { font-size:0.7rem; font-weight:600; letter-spacing:0.1em; text-transform:uppercase; color:var(--accent); margin-bottom:0.4rem; }
+  h2 { font-family:'Playfair Display',serif; font-size:1.7rem; color:var(--navy); font-weight:700; margin-bottom:0.4rem; letter-spacing:-0.01em; }
+  .s-sub { font-size:0.88rem; color:var(--muted); margin-bottom:2rem; }
+
+  /* EXEC SUMMARY */
+  .exec-list { list-style:none; counter-reset:exec; }
+  .exec-list li { position:relative; padding:1rem 1rem 1rem 3.5rem; border-bottom:1px solid var(--border); font-size:0.9rem; color:var(--slate); }
+  .exec-list li:last-child { border-bottom:none; }
+  .exec-list li::before { counter-increment:exec; content:counter(exec); position:absolute; left:0; top:1rem; width:2rem; height:2rem; background:var(--accent); color:#fff; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.75rem; font-weight:700; }
+
+  /* PROBLEM CARDS */
+  .problem-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:1.5rem; }
+  .p-card { background:var(--card); border:1px solid var(--border); border-radius:8px; padding:1.5rem; }
+  .p-card .icon { font-size:1.5rem; margin-bottom:0.8rem; }
+  .p-card h4 { font-size:0.95rem; color:var(--navy); margin-bottom:0.4rem; }
+  .p-card p { font-size:0.82rem; color:var(--muted); }
+
+  /* SOLUTION */
+  .sol-grid { display:grid; grid-template-columns:1fr 1fr; gap:2rem; }
+  .sol-item h4 { font-size:0.95rem; color:var(--navy); margin-bottom:0.3rem; }
+  .sol-item p { font-size:0.85rem; color:var(--muted); }
+  .sol-item .tag { display:inline-block; font-size:0.65rem; font-weight:600; color:var(--accent); background:rgba(30,64,175,0.08); padding:0.15rem 0.5rem; border-radius:3px; margin-bottom:0.5rem; }
+
+  /* PROCESS */
+  .process-flow { display:flex; align-items:flex-start; gap:1rem; flex-wrap:wrap; justify-content:center; }
+  .step { flex:1; min-width:180px; max-width:240px; text-align:center; padding:1.5rem 1rem; background:var(--card); border:1px solid var(--border); border-radius:8px; }
+  .step .num { font-size:0.7rem; font-weight:700; color:var(--accent); margin-bottom:0.5rem; }
+  .step h4 { font-size:0.9rem; color:var(--navy); margin-bottom:0.3rem; }
+  .step p { font-size:0.78rem; color:var(--muted); }
+  .arrow { display:flex; align-items:center; font-size:1.5rem; color:var(--light); padding-top:2rem; }
+
+  /* ECONOMICS */
+  .econ-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:1.5rem; margin-bottom:2rem; }
+  .econ-card { background:var(--card); border:1px solid var(--border); border-radius:8px; padding:1.5rem; text-align:center; }
+  .econ-card .big { font-family:'Playfair Display',serif; font-size:2rem; color:var(--navy); font-weight:700; }
+  .econ-card .label { font-size:0.78rem; color:var(--muted); margin-top:0.3rem; }
+
+  /* TABLE */
+  table { width:100%; border-collapse:collapse; font-size:0.82rem; background:var(--card); border-radius:8px; overflow:hidden; border:1px solid var(--border); }
+  th { background:var(--navy); color:#fff; padding:0.8rem 1rem; text-align:left; font-weight:600; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.05em; }
+  td { padding:0.7rem 1rem; border-bottom:1px solid var(--border); }
+  tr:last-child td { border-bottom:none; }
+  tr:hover td { background:var(--bg-alt); }
+  .check { color:var(--green); font-weight:700; }
+  .cross { color:var(--red); font-weight:700; }
+  .partial { color:#D97706; font-weight:600; }
+
+  /* MARKET */
+  .market-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:1.5rem; }
+  .m-card { background:var(--card); border:1px solid var(--border); border-radius:8px; padding:1.5rem; }
+  .m-card h4 { font-size:0.9rem; color:var(--navy); margin-bottom:0.3rem; }
+  .m-card .val { font-family:'Playfair Display',serif; font-size:1.5rem; color:var(--accent); font-weight:700; }
+  .m-card p { font-size:0.78rem; color:var(--muted); margin-top:0.3rem; }
+
+  /* BUSINESS MODEL */
+  .bm-grid { display:grid; grid-template-columns:1fr 1fr; gap:2rem; }
+  .bm-item { background:var(--card); border:1px solid var(--border); border-radius:8px; padding:1.5rem; }
+  .bm-item h4 { font-size:0.95rem; color:var(--navy); margin-bottom:0.5rem; }
+  .bm-item ul { list-style:none; }
+  .bm-item li { font-size:0.82rem; color:var(--muted); padding:0.3rem 0; padding-left:1.2rem; position:relative; }
+  .bm-item li::before { content:"→"; position:absolute; left:0; color:var(--accent); }
+
+  /* TIMELINE */
+  .timeline { position:relative; padding-left:2rem; }
+  .timeline::before { content:''; position:absolute; left:0.45rem; top:0; bottom:0; width:2px; background:linear-gradient(to bottom, var(--accent), var(--accent-light)); }
+  .tl-item { position:relative; padding-bottom:2rem; }
+  .tl-item::before { content:''; position:absolute; left:-1.55rem; top:0.3rem; width:10px; height:10px; background:var(--accent); border-radius:50%; border:2px solid var(--bg); }
+  .tl-date { font-size:0.7rem; font-weight:700; color:var(--accent); text-transform:uppercase; letter-spacing:0.08em; }
+  .tl-item h4 { font-size:0.95rem; color:var(--navy); margin:0.2rem 0; }
+  .tl-item p { font-size:0.82rem; color:var(--muted); }
+
+  /* ASK */
+  .ask-box { background:var(--navy); color:#fff; border-radius:12px; padding:3rem; text-align:center; }
+  .ask-box .amount { font-family:'Playfair Display',serif; font-size:3rem; font-weight:700; margin-bottom:0.3rem; }
+  .ask-box .round-label { font-size:0.85rem; color:var(--light); margin-bottom:2rem; }
+  .ask-alloc { display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; text-align:left; }
+  .ask-alloc .pct { font-size:1.5rem; font-weight:700; color:var(--accent-light); }
+  .ask-alloc .desc { font-size:0.8rem; color:var(--light); margin-top:0.2rem; }
+
+  /* CTA */
+  .cta-section { text-align:center; }
+  .cta-section p { font-size:0.9rem; color:var(--muted); margin-bottom:1.5rem; }
+  .cta-btn { display:inline-block; padding:0.85rem 2.5rem; background:var(--accent); color:#fff; text-decoration:none; border-radius:6px; font-weight:600; font-size:0.9rem; transition:background 0.2s; }
+  .cta-btn:hover { background:var(--accent-light); }
+  .contact-info { margin-top:1.5rem; font-size:0.8rem; color:var(--light); }
+
+  /* FOOTER */
+  footer { text-align:center; padding:2rem; font-size:0.7rem; color:var(--light); border-top:1px solid var(--border); max-width:700px; margin:0 auto; }
+
+  /* CONF FOOTER */
+  .conf-footer { text-align:right; font-size:0.65rem; color:var(--light); margin-top:3rem; padding-top:1rem; border-top:1px solid var(--border); }
+
+  /* FADE */
+  .fade { opacity:0; transform:translateY(20px); transition:opacity 0.6s ease, transform 0.6s ease; }
+  .fade.visible { opacity:1; transform:translateY(0); }
+
+  @media (max-width:640px) {
+    .cover h1 { font-size:2rem; }
+    .sol-grid, .bm-grid, .ask-alloc { grid-template-columns:1fr; }
+    .cover-meta { flex-direction:column; gap:1rem; }
+    .process-flow { flex-direction:column; align-items:center; }
+    .arrow { transform:rotate(90deg); padding:0; }
+  }
+</style>
+</head>
+<body>
+
+<!-- EMAIL GATE -->
+<div id="gate">
+  <div class="gate-box">
+    <h1>CETTS</h1>
+    <p>Confidential Investor Memorandum — March 2026</p>
+    <input type="text" id="gate-name" placeholder="Full Name">
+    <input type="email" id="gate-email" placeholder="Email Address">
+    <button onclick="enterDocument()">Access Document</button>
+    <div class="disclaimer">By accessing this document, you acknowledge that it contains confidential information intended solely for the named recipient. Unauthorized distribution is prohibited.</div>
+  </div>
+</div>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">CETTS <span>Memorandum</span></div>
+  <div class="nav-right">
+    <span class="nav-tag">Confidential</span>
+    <a href="#the-ask">The Ask</a>
+  </div>
+</nav>
+
+<div class="container">
+
+  <!-- COVER -->
+  <section class="cover fade">
+    <div class="overline">Confidential Investor Memorandum — March 2026</div>
+    <h1>Continuous Electrochemical<br>Tailings Treatment System</h1>
+    <div class="subtitle">Recovering valuable metals from mine tailings while neutralizing acid drainage and recycling process water — at half the cost of conventional methods.</div>
+    <div class="cover-meta">
+      <div><span class="val">Series A</span>Investment Round</div>
+      <div><span class="val">$20,000,000</span>Capital Sought</div>
+      <div><span class="val">Pilot Stage</span>Current Status</div>
+    </div>
+  </section>
+
+  <!-- 1. EXEC SUMMARY -->
+  <section class="fade">
+    <div class="s-num">Section 01</div>
+    <h2>Executive Summary</h2>
+    <div class="s-sub">Key investment highlights at a glance.</div>
+    <ol class="exec-list">
+      <li><strong>$50B+ addressable market</strong> in mine tailings remediation and critical mineral recovery, driven by regulatory pressure and supply chain security.</li>
+      <li><strong>Proprietary electrochemical process</strong> that selectively recovers copper, gold, lithium, rare earths, and other metals from tailings at ambient temperature with no chemical waste stream.</li>
+      <li><strong>50–60% lower OPEX</strong> than conventional hydrometallurgical or pyrometallurgical approaches, with modular containerized deployment in weeks rather than years.</li>
+      <li><strong>Closed-loop system</strong> — acids are regenerated in-process, water is recycled, and residual solids are inert. Zero liquid discharge capable.</li>
+      <li><strong>Open-source membrane innovation</strong> — low-cost ion exchange membranes made from off-the-shelf materials ($15–30 vs. $500+ for commercial Nafion equivalents).</li>
+      <li><strong>Clear path to revenue</strong> — pilot unit completion Q3 2026, first mining partner LOI by Q1 2027, commercial scale-up by Q4 2027.</li>
+    </ol>
+    <div class="conf-footer">CETTS — Confidential Investor Memorandum</div>
+  </section>
+
+  <!-- 2. THE PROBLEM -->
+  <section class="fade">
+    <div class="s-num">Section 02</div>
+    <h2>The Problem</h2>
+    <div class="s-sub">A $50 billion environmental liability that's also a massive untapped resource.</div>
+    <div class="problem-grid">
+      <div class="p-card">
+        <div class="icon">⚠️</div>
+        <h4>Acid Mine Drainage</h4>
+        <p>Sulfide minerals in tailings oxidize, generating sulfuric acid that leaches heavy metals into waterways. Affects 20,000+ sites globally.</p>
+      </div>
+      <div class="p-card">
+        <div class="icon">💰</div>
+        <h4>Stranded Value</h4>
+        <p>Billions in recoverable metals (Cu, Au, Li, REEs) locked in tailings dams. Current extraction methods are too expensive or environmentally destructive.</p>
+      </div>
+      <div class="p-card">
+        <div class="icon">📋</div>
+        <h4>Regulatory Pressure</h4>
+        <p>Tightening EPA, EU, and APAC regulations mandate active tailings treatment. Non-compliance penalties exceed $50K/day in many jurisdictions.</p>
+      </div>
+      <div class="p-card">
+        <div class="icon">🏭</div>
+        <h4>Legacy Methods Fail</h4>
+        <p>Lime neutralization creates secondary sludge. SX-EW requires large footprints. Bioleaching is slow. None recover metals economically at small scale.</p>
+      </div>
+    </div>
+    <div class="conf-footer">CETTS — Confidential Investor Memorandum</div>
+  </section>
+
+  <!-- 3. THE SOLUTION -->
+  <section class="fade">
+    <div class="s-num">Section 03</div>
+    <h2>The CETTS Solution</h2>
+    <div class="s-sub">Electrochemistry meets modular engineering for a closed-loop treatment system.</div>
+    <div class="sol-grid">
+      <div class="sol-item">
+        <div class="tag">Core Innovation</div>
+        <h4>Open-Source Ion Exchange Membrane</h4>
+        <p>Proprietary membrane made from water softener resin, PVC cement, and fiberglass mesh. Cost: $15–30 per unit vs. $500+ for Nafion. Acid-resistant, high ion selectivity, field-replaceable.</p>
+      </div>
+      <div class="sol-item">
+        <div class="tag">Architecture</div>
+        <h4>Containerized Modular Units</h4>
+        <p>Each CETTS unit fits in a standard 20ft shipping container. Deploy to any mine site in weeks. Stack units for throughput scaling. No civil works required.</p>
+      </div>
+      <div class="sol-item">
+        <div class="tag">Process</div>
+        <h4>Selective Electrochemical Recovery</h4>
+        <p>Continuous dissolution using regenerated HCl + sodium chlorate at room temperature. Selective plating of target metals. Acid recycled in closed loop.</p>
+      </div>
+      <div class="sol-item">
+        <div class="tag">Environmental</div>
+        <h4>Zero Waste Stream</h4>
+        <p>All acids regenerated. Process water recycled. Residual solids are inert calcium/silica compounds suitable for backfill. Zero liquid discharge capable.</p>
+      </div>
+    </div>
+    <div class="conf-footer">CETTS — Confidential Investor Memorandum</div>
+  </section>
+
+  <!-- 4. HOW IT WORKS -->
+  <section class="fade">
+    <div class="s-num">Section 04</div>
+    <h2>How It Works</h2>
+    <div class="s-sub">Three-stage continuous process from raw tailings to refined metals.</div>
+    <div class="process-flow">
+      <div class="step">
+        <div class="num">Stage 01</div>
+        <h4>Leach & Dissolve</h4>
+        <p>Tailings slurry enters the Continuous Mining Unit (CMU). HCl + sodium chlorate dissolves target metals at room temperature. Acid is continuously regenerated.</p>
+      </div>
+      <div class="arrow">→</div>
+      <div class="step">
+        <div class="num">Stage 02</div>
+        <h4>Separate & Purify</h4>
+        <p>Pregnant solution passes through ion exchange membranes. Selective separation of metal ions by charge and size. Multi-stage electrodialysis for high purity.</p>
+      </div>
+      <div class="arrow">→</div>
+      <div class="step">
+        <div class="num">Stage 03</div>
+        <h4>Plate & Recover</h4>
+        <p>Continuous Refining Unit (CRU) electroplates pure metals onto cathodes. 99.5%+ purity achievable. Cathodes harvested on scheduled cycles.</p>
+      </div>
+    </div>
+    <div class="conf-footer">CETTS — Confidential Investor Memorandum</div>
+  </section>
+
+  <!-- 5. UNIT ECONOMICS -->
+  <section class="fade">
+    <div class="s-num">Section 05</div>
+    <h2>Unit Economics</h2>
+    <div class="s-sub">Compelling economics at pilot scale, improving dramatically at commercial scale.</div>
+    <div class="econ-grid">
+      <div class="econ-card">
+        <div class="big">$9.50</div>
+        <div class="label">OPEX per tonne of tailings processed</div>
+      </div>
+      <div class="econ-card">
+        <div class="big">$200K</div>
+        <div class="label">Unit manufacturing cost (at scale)</div>
+      </div>
+      <div class="econ-card">
+        <div class="big">85%+</div>
+        <div class="label">Target metal recovery rate</div>
+      </div>
+      <div class="econ-card">
+        <div class="big">18 mo</div>
+        <div class="label">Payback period per unit</div>
+      </div>
+    </div>
+    <table>
+      <thead>
+        <tr><th>Cost Component</th><th>Per Tonne</th><th>% of OPEX</th><th>Notes</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Electricity</td><td>$3.80</td><td>40%</td><td>5–6V cell voltage, 50A capacity</td></tr>
+        <tr><td>Reagents (net)</td><td>$1.90</td><td>20%</td><td>After acid regeneration credit</td></tr>
+        <tr><td>Membrane replacement</td><td>$0.95</td><td>10%</td><td>$15–30/membrane, 6-month life</td></tr>
+        <tr><td>Labor</td><td>$1.90</td><td>20%</td><td>1 operator per 2 units</td></tr>
+        <tr><td>Maintenance</td><td>$0.95</td><td>10%</td><td>Standard industrial components</td></tr>
+      </tbody>
+    </table>
+    <div class="conf-footer">CETTS — Confidential Investor Memorandum</div>
+  </section>
+
+  <!-- 6. TARGET METALS & MARKET -->
+  <section class="fade">
+    <div class="s-num">Section 06</div>
+    <h2>Target Metals & Market Opportunity</h2>
+    <div class="s-sub">Critical minerals with strong demand tailwinds and supply constraints.</div>
+    <div class="market-grid">
+      <div class="m-card">
+        <h4>Copper</h4>
+        <div class="val">$12,000/t</div>
+        <p>EV & grid infrastructure demand. 10M+ tonnes in global tailings.</p>
+      </div>
+      <div class="m-card">
+        <h4>Gold</h4>
+        <div class="val">$2,300/oz</div>
+        <p>Residual gold in sulfide tailings. Even 0.5 g/t is economic with CETTS.</p>
+      </div>
+      <div class="m-card">
+        <h4>Lithium</h4>
+        <div class="val">$25,000/t</div>
+        <p>Battery supply chain critical. Present in spodumene and clay tailings.</p>
+      </div>
+      <div class="m-card">
+        <h4>Rare Earth Elements</h4>
+        <div class="val">$50B market</div>
+        <p>Defense & tech critical. China controls 60%+ of supply. Tailings are alternative source.</p>
+      </div>
+    </div>
+    <div class="conf-footer">CETTS — Confidential Investor Memorandum</div>
+  </section>
+
+  <!-- 7. BUSINESS MODEL -->
+  <section class="fade">
+    <div class="s-num">Section 07</div>
+    <h2>Business Model</h2>
+    <div class="s-sub">Multiple revenue streams with recurring income and high margins.</div>
+    <div class="bm-grid">
+      <div class="bm-item">
+        <h4>Unit Sales & Leasing</h4>
+        <ul>
+          <li>Sell containerized units at $350K–$500K each</li>
+          <li>Leasing option: $15K–$25K/month per unit</li>
+          <li>Installation and commissioning services</li>
+          <li>Target: 50+ units deployed by 2028</li>
+        </ul>
+      </div>
+      <div class="bm-item">
+        <h4>Consumables & Service</h4>
+        <ul>
+          <li>Membrane replacement kits (recurring)</li>
+          <li>Reagent supply contracts</li>
+          <li>Remote monitoring & optimization SaaS</li>
+          <li>Annual maintenance contracts</li>
+        </ul>
+      </div>
+      <div class="bm-item">
+        <h4>Metal Offtake</h4>
+        <ul>
+          <li>Revenue share on recovered metals (10–20%)</li>
+          <li>Toll processing agreements</li>
+          <li>Metal trading and hedging</li>
+          <li>Carbon credit generation from remediation</li>
+        </ul>
+      </div>
+      <div class="bm-item">
+        <h4>Licensing & IP</h4>
+        <ul>
+          <li>Technology licensing to Tier 1 miners</li>
+          <li>Regional exclusive licenses</li>
+          <li>Joint venture structures for large sites</li>
+          <li>Open-source membrane community ecosystem</li>
+        </ul>
+      </div>
+    </div>
+    <div class="conf-footer">CETTS — Confidential Investor Memorandum</div>
+  </section>
+
+  <!-- 8. COMPETITIVE LANDSCAPE -->
+  <section class="fade">
+    <div class="s-num">Section 08</div>
+    <h2>Competitive Landscape</h2>
+    <div class="s-sub">CETTS vs. conventional tailings treatment approaches.</div>
+    <table>
+      <thead>
+        <tr><th>Capability</th><th>CETTS</th><th>Lime Neutralization</th><th>SX-EW</th><th>Bioleaching</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Metal Recovery</td><td class="check">&#10003;</td><td class="cross">&#10007;</td><td class="check">&#10003;</td><td class="check">&#10003;</td></tr>
+        <tr><td>Acid Neutralization</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="cross">&#10007;</td><td class="cross">&#10007;</td></tr>
+        <tr><td>Water Recycling</td><td class="check">&#10003;</td><td class="cross">&#10007;</td><td class="partial">Limited</td><td class="cross">&#10007;</td></tr>
+        <tr><td>Zero Waste Stream</td><td class="check">&#10003;</td><td class="cross">&#10007;</td><td class="cross">&#10007;</td><td class="cross">&#10007;</td></tr>
+        <tr><td>Room Temperature</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td></tr>
+        <tr><td>Multi-Metal Recovery</td><td class="check">&#10003;</td><td class="cross">&#10007;</td><td class="check">&#10003;</td><td class="check">&#10003;</td></tr>
+        <tr><td>Modular / Containerized</td><td class="check">&#10003;</td><td class="cross">&#10007;</td><td class="cross">&#10007;</td><td class="partial">Limited</td></tr>
+        <tr><td>OPEX per Tonne</td><td><strong>$9.50</strong></td><td>$18.00</td><td>$15.00</td><td>$12.00+</td></tr>
+        <tr><td>Time to Deploy</td><td><strong>Weeks</strong></td><td>12–24 months</td><td>6–12 months</td><td>6–18 months</td></tr>
+      </tbody>
+    </table>
+    <div class="conf-footer">CETTS — Confidential Investor Memorandum</div>
+  </section>
+
+  <!-- 10. ROADMAP -->
+  <section class="fade">
+    <div class="s-num">Section 09</div>
+    <h2>Roadmap & Milestones</h2>
+    <div class="s-sub">Clear execution path from pilot validation to commercial-scale deployment.</div>
+    <div class="timeline">
+      <div class="tl-item">
+        <div class="tl-date">Q3 2026</div>
+        <h4>Pilot Unit Completion</h4>
+        <p>Complete first containerized pilot unit. Begin controlled testing with real tailings samples from partner mine sites.</p>
+      </div>
+      <div class="tl-item">
+        <div class="tl-date">Q4 2026</div>
+        <h4>Third-Party Validation</h4>
+        <p>Independent laboratory testing and certification of recovery rates, effluent water quality, and membrane longevity under continuous operation.</p>
+      </div>
+      <div class="tl-item">
+        <div class="tl-date">Q1 2027</div>
+        <h4>Mining Partner LOI</h4>
+        <p>Secure letter of intent from first mining partner for on-site pilot deployment. Target: Tier 1 or Tier 2 mining operator.</p>
+      </div>
+      <div class="tl-item">
+        <div class="tl-date">Q2 2027</div>
+        <h4>Field Deployment</h4>
+        <p>Deploy pilot at partner mine site. Collect 6 months of continuous operational data, recovery metrics, and maintenance logs.</p>
+      </div>
+      <div class="tl-item">
+        <div class="tl-date">Q4 2027</div>
+        <h4>Commercial Scale-Up</h4>
+        <p>Begin manufacturing of 10+ commercial units. Establish sales pipeline and regional distribution partnerships.</p>
+      </div>
+      <div class="tl-item">
+        <div class="tl-date">2028</div>
+        <h4>Series B & Expansion</h4>
+        <p>Raise follow-on capital to fund international expansion, licensing program, and next-generation membrane R&D.</p>
+      </div>
+    </div>
+    <div class="conf-footer">CETTS — Confidential Investor Memorandum</div>
+  </section>
+
+  <!-- 11. THE ASK -->
+  <section id="the-ask" class="fade">
+    <div class="s-num">Section 10</div>
+    <h2>The Ask</h2>
+    <div class="s-sub">Series A capital to take CETTS from pilot validation to commercial-scale deployment.</div>
+    <div class="ask-box">
+      <div class="amount">$20,000,000</div>
+      <div class="round-label">Series A Investment Round</div>
+      <div class="ask-alloc">
+        <div>
+          <div class="pct">40%</div>
+          <div class="desc">Pilot manufacturing, field deployment, and operational testing across multiple mine sites</div>
+        </div>
+        <div>
+          <div class="pct">25%</div>
+          <div class="desc">Engineering team expansion, process optimization, and membrane R&D</div>
+        </div>
+        <div>
+          <div class="pct">20%</div>
+          <div class="desc">Third-party certification, regulatory compliance, and IP protection</div>
+        </div>
+        <div>
+          <div class="pct">15%</div>
+          <div class="desc">Operations, legal, working capital, and business development</div>
+        </div>
+      </div>
+    </div>
+    <div class="conf-footer">CETTS — Confidential Investor Memorandum</div>
+  </section>
+
+  <!-- 12. CONTACT -->
+  <section class="cta-section fade">
+    <div class="s-num">Section 11</div>
+    <h2>Contact</h2>
+    <p>For inquiries regarding this investment opportunity, please contact:</p>
+    <a href="/cdn-cgi/l/email-protection#1871766e7d6b6c587b7d6c6c6b367b7775" class="cta-btn"><span class="__cf_email__" data-cfemail="761f18001305023615130202055815191b">[email&#160;protected]</span></a>
+    <div class="contact-info">
+      CETTS — Continuous Electrochemical Tailings Treatment System<br>
+      www.cetts.com
+    </div>
+  </section>
+
+  <footer>
+    <strong>CONFIDENTIAL</strong> — This document is provided for informational purposes only and does not constitute an offer to sell or a solicitation of an offer to buy any securities. This memorandum contains forward-looking statements that involve risks and uncertainties. Actual results may differ materially from those anticipated. Distribution of this document without prior written consent of CETTS is strictly prohibited.<br><br>
+    &copy; 2026 CETTS — Continuous Electrochemical Tailings Treatment System. All rights reserved.
+  </footer>
+
+</div>
+
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+function enterDocument() {
+  const name = document.getElementById('gate-name').value.trim();
+  const email = document.getElementById('gate-email').value.trim();
+  if (!name || !email) { alert('Please enter your name and email to continue.'); return; }
+  document.getElementById('gate').classList.add('hidden');
+}
+
+// Fade-in on scroll
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+}, { threshold: 0.12 });
+document.querySelectorAll('.fade').forEach(el => observer.observe(el));
+</script>
+
+</body>
+</html>
